@@ -1,0 +1,17 @@
+version: "3.9"
+name: "runner"
+
+services:
+  runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - AUTH_TOKEN=36174a4d-9c5f-4e69-a0ce-d74ba94ad5d6
+      - NAME_TO_LIKE=MICHAELA
+      - PROFILES_TO_CHECK=2000
+      - PROFILES_TO_LIKE=20
+#      - NAME_TO_LIKE=Diane
+#      - NAME_TO_LIKE=Eli
