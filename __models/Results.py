@@ -1,12 +1,12 @@
-from models.Photo import Photo
-from models.User import User
+from models import Photo
+from models import User
 
 
 class Results:
     users: list[User] = []
 
-    def __init__(self, raw_data):
-        if 'data' not in raw_data:
+    def __init__(self, raw_data=None):
+        if raw_data is None or 'data' not in raw_data:
             return
         if 'results' not in raw_data['data']:
             return
@@ -17,12 +17,20 @@ class Results:
                 return
             if 'user' not in user:
                 return
-            new_user = User(user['user']['_id'], user['user']['name'], user['s_number'])
+            new_user = User(
+                name=user['user']['name'],
+                s_number=user['s_number'],
+                user_id=user['user']['_id'])
             if 'city' in user['user']:
                 new_user.city = user['user']['city']['name']
             if 'photos' in user['user']:
+                photos = []
                 for photo in user['user']['photos']:
-                    new_user.photos.append(Photo(photo['id'], photo['url']))
+                    photos.append(Photo(
+                        photo_id=photo['id'],
+                        url=photo['url']
+                    ))
+                new_user.photos = photos
             self.users.append(new_user)
 
 

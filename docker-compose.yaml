@@ -2,10 +2,22 @@ version: "3.9"
 name: "runner"
 
 services:
+  db:
+    container_name: storage
+    image: postgres
+    environment:
+      POSTGRES_DB: tinder
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: oleg
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./db_init:/docker-entrypoint-initdb.d
   runner:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      - db
     volumes:
       - .:/app
     environment:
@@ -13,5 +25,14 @@ services:
       - NAME_TO_LIKE=MICHAELA
       - PROFILES_TO_CHECK=2000
       - PROFILES_TO_LIKE=20
-#      - NAME_TO_LIKE=Diane
-#      - NAME_TO_LIKE=Eli
+  #      - NAME_TO_LIKE=Diane
+  #      - NAME_TO_LIKE=Eli
+#  pg-admin:
+#    image: dpage/pgadmin4
+#    environment:
+#      - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
+#      - PGADMIN_DEFAULT_PASSWORD=postgres
+#    ports:
+#      - "8888:80"
+#    depends_on:
+#      - db
