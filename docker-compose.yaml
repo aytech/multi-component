@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: tinder
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: oleg
+    ports:
+      - "5432:5432"
     volumes:
       - ./data:/var/lib/postgresql/data
       - ./db_init:/docker-entrypoint-initdb.d

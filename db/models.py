@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-from sqlalchemy import String, Integer, ForeignKey, TIMESTAMP, BigInteger
+from sqlalchemy import String, ForeignKey, TIMESTAMP, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 
 
@@ -44,7 +44,10 @@ class Photo(Base):
     user: Mapped['User'] = relationship(back_populates='photos')
 
     def __repr__(self):
-        return f'Photo(id={self.id!r}, photo_id={self.photo_id!r}, url={self.url!r})'
+        return f'''
+            Photo(created={self.created!r}, id={self.id!r}, photo_id={self.photo_id!r}, url={self.url!r}), \
+            user_id={self.user_id!r}
+        '''
 
 
 class Log(Base):
@@ -55,4 +58,4 @@ class Log(Base):
     text: Mapped[str] = mapped_column()
 
     def __repr__(self):
-        return f'Photo(id={self.id!r}, photo_id={self.photo_id!r}, url={self.url!r})'
+        return f'Log(created={self.created!r}, id={self.id!r}, text={self.text!r})'

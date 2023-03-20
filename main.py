@@ -5,8 +5,8 @@ import requests
 from requests import JSONDecodeError
 
 from db.PostgresStorage import PostgresStorage
-from __models.Results import Results
-from models import User
+from utilities.Results import Results
+from db.dao import UserDao
 
 AUTH_TOKEN = os.environ['AUTH_TOKEN']
 NAME_TO_LIKE = os.environ['NAME_TO_LIKE']
@@ -44,18 +44,18 @@ def get_batch_data(_registry: PostgresStorage) -> Results:
         exit(1)
 
 
-def send_like(user: User, _registry: PostgresStorage) -> None:
+def send_like(user: UserDao, _registry: PostgresStorage) -> None:
     payload = {
         's_number': user.s_number,
-        'liked_content_id': user.photos[0].id,
+        'liked_content_id': user.photos[0].photo_id,
         'liked_content_type': 'photo'
     }
     like_url = 'https://api.gotinder.com/like/'
     result = requests.post(like_url + user.user_id, headers=get_request_headers(), json=payload)
-    _registry.add_message('User %s - %s is liked with status %s' % (user.name, user.id, result.json()['status']))
+    _registry.add_message('User %s - %s is liked with status %s' % (user.name, user.user_id, result.json()['status']))
 
 
-def send_pass(user: User, _registry: PostgresStorage) -> None:
+def send_pass(user: UserDao, _registry: PostgresStorage) -> None:
     pass_url = 'https://api.gotinder.com/pass/'
     params = {'s_number': user.s_number}
 
@@ -76,28 +76,26 @@ def process_next_like(_registry: PostgresStorage):
     results = get_batch_data(_registry=_registry)
 
     for user in results.users:
-        print(user)
-        print('ID: ', _registry.get_user(user_id=user.id))
 
         if profiles_checked >= PROFILES_TO_CHECK:
             return False
         time.sleep(1)  # sleep before liking or passing
 
         if NAME_TO_LIKE == user.name and len(user.photos) > 0:
-            if _registry.get_user(user_id=user.id) is not None:
-                _registry.add_message('User %s (%s) is already liked!!!' % (user.name, user.id))
+            if _registry.get_user(user_id=user.user_id) is not None:
+                _registry.add_message('User %s (%s) is already liked!!!' % (user.name, user.user_id))
             else:
                 send_like(user=user, _registry=_registry)
                 _registry.add_user(user=user)
                 _registry.add_message('Next like %s is found and liked!!!' % user.name)
         else:
-            if _registry.get_user(user_id=user.id):
-                _registry.add_message('User %s (%s) is already passed!!!' % (user.name, user.id))
+            if _registry.get_user(user_id=user.user_id):
+                _registry.add_message('User %s (%s) is already passed!!!' % (user.name, user.user_id))
             else:
                 send_pass(user=user, _registry=_registry)
-                _registry.add_user(user=user)
                 _registry.add_message(
                     'User %s does not match with %s, continue polling...' % (user.name, NAME_TO_LIKE))
+                _registry.add_user(user=user)
         profiles_checked += 1
 
 
@@ -121,15 +119,15 @@ def process_local_likes(_registry: PostgresStorage):
             time.sleep(1)  # sleep before liking
 
             if user.city in ('Praha', 'Hlavní město Praha', 'Прага', 'Prague', 'Beroun',):
-                if _registry.get_user(user.id):
-                    _registry.add_message('User %s (%s) is already liked!!!' % (user.name, user.id))
+                if _registry.get_user(user.user_id):
+                    _registry.add_message('User %s (%s) is already liked!!!' % (user.name, user.user_id))
                 else:
                     send_like(user=user, _registry=_registry)
                     _registry.add_user(user=user)
                     profiles_liked += 1
             else:
-                if _registry.get_user(user.id):
-                    _registry.add_message('User %s (%s) is already passed!!!' % (user.name, user.id))
+                if _registry.get_user(user_id=user.user_id):
+                    _registry.add_message('User %s (%s) is already passed!!!' % (user.name, user.user_id))
                 else:
                     send_pass(user=user, _registry=_registry)
                     _registry.add_user(user=user)

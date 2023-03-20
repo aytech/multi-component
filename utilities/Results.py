@@ -1,9 +1,8 @@
-from models import Photo
-from models import User
+from db.dao import UserDao, PhotoDao
 
 
 class Results:
-    users: list[User] = []
+    users: list[UserDao] = []
 
     def __init__(self, raw_data=None):
         if raw_data is None or 'data' not in raw_data:
@@ -17,7 +16,7 @@ class Results:
                 return
             if 'user' not in user:
                 return
-            new_user = User(
+            new_user = UserDao(
                 name=user['user']['name'],
                 s_number=user['s_number'],
                 user_id=user['user']['_id'])
@@ -26,7 +25,7 @@ class Results:
             if 'photos' in user['user']:
                 photos = []
                 for photo in user['user']['photos']:
-                    photos.append(Photo(
+                    photos.append(PhotoDao(
                         photo_id=photo['id'],
                         url=photo['url']
                     ))
