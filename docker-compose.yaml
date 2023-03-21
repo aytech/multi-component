@@ -25,7 +25,7 @@ services:
     environment:
       - AUTH_TOKEN=36174a4d-9c5f-4e69-a0ce-d74ba94ad5d6
       - NAME_TO_LIKE=Svetlana
-      - PROFILES_TO_CHECK=50
+      - PROFILES_TO_CHECK=100
       - PROFILES_TO_LIKE=5
   #      - NAME_TO_LIKE=Diane
   #      - NAME_TO_LIKE=Eli

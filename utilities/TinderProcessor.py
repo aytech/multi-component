@@ -49,6 +49,9 @@ class TinderProcessor:
 
             for user in results.users:
 
+                self.storage.add_message(
+                    'Processed %s out of %s profiles so far...' % (profiles_checked, profiles_to_check))
+
                 if profiles_checked >= profiles_to_check:
                     self.storage.add_message(
                         'Terminating next like process, as already checked %s profiles out of %s' % (
@@ -80,6 +83,9 @@ class TinderProcessor:
             results = self.get_batch_profile_data()
 
             for user in results.users:
+
+                self.storage.add_message(
+                    'Liked %s out of %s profiles so far...' % (profiles_liked, profiles_to_like))
 
                 if profiles_liked >= profiles_to_like:
                     self.storage.add_message(terminate_message % (profiles_liked, profiles_to_like))
