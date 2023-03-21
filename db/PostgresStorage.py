@@ -48,6 +48,7 @@ class PostgresStorage:
             session.commit()
 
     def add_message(self, message: str):
+        print('Logging message: %s' % message)
         with self.session as session:
             session.add(Log(
                 created=datetime.datetime.now(),
