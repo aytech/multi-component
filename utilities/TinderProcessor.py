@@ -39,17 +39,17 @@ class TinderProcessor:
                 message = 'Failed to fetch batch data, reason: %s' % e
             raise CommunicationError(message=message)
 
-    def process_next_like(self, name_to_like, profiles_to_check: int = 10):
+    def process_batch_scan(self, target_profile_name: str, limit: int = 10):
 
-        profiles_checked = 0
+        profiles_scanned = 0
 
         while True:
 
             time.sleep(1)  # wait before getting next batch
 
-            if profiles_checked >= profiles_to_check:
-                self.storage.add_message('Terminating next like process, as already checked %s profiles out of %s' % (
-                    profiles_checked, profiles_to_check))
+            if profiles_scanned >= limit:
+                message = 'Terminating next like process, as already checked %s profiles out of %s'
+                self.storage.add_message(message % (profiles_scanned, limit))
                 return
 
             try:
@@ -60,35 +60,34 @@ class TinderProcessor:
 
             for user in results.users:
 
-                self.storage.add_message(
-                    'Processed %s out of %s profiles so far...' % (profiles_checked, profiles_to_check))
+                self.storage.add_message('Processed %s out of %s profiles so far...' % (profiles_scanned, limit))
 
-                if profiles_checked >= profiles_to_check:
-                    self.storage.add_message(
-                        'Terminating next like process, as already checked %s profiles out of %s' % (
-                            profiles_checked, profiles_to_check))
+                if profiles_scanned >= limit:
+                    message = 'Terminating next like process, as already checked %s profiles out of %s'
+                    self.storage.add_message(message % (profiles_scanned, limit))
                     return
                 time.sleep(1)  # sleep before liking or passing
 
-                if name_to_like == user.name and len(user.photos) > 0:
+                if target_profile_name == user.name and len(user.photos) > 0:
                     self.like_user(user=user)
-                    self.storage.add_message(
-                        'Terminating next like process, as desired profile (%s) is found' % name_to_like)
+                    message = 'Terminating next like process, as desired profile (%s) is found'
+                    self.storage.add_message(message % target_profile_name)
                     return
                 else:
-                    if self.pass_user(user=user, reason='name does not match %s' % name_to_like):
-                        profiles_checked += 1
+                    if self.pass_user(user=user, reason='name does not match %s' % target_profile_name):
+                        profiles_scanned += 1
 
-    def process_local_likes(self, profiles_to_like: int = 10):
-        profiles_liked = 0
+    def process_batch_likes(self, limit: int = 10):
+
+        profiles_scanned = 0
         terminate_message = 'Terminating like process, as already liked %s profiles out of %s'
 
         while True:
 
             time.sleep(1)  # wait before getting next batch
 
-            if profiles_liked >= profiles_to_like:
-                self.storage.add_message(terminate_message % (profiles_liked, profiles_to_like))
+            if profiles_scanned >= limit:
+                self.storage.add_message(terminate_message % (profiles_scanned, limit))
                 return
 
             try:
@@ -99,18 +98,17 @@ class TinderProcessor:
 
             for user in results.users:
 
-                self.storage.add_message(
-                    'Liked %s out of %s profiles so far...' % (profiles_liked, profiles_to_like))
+                self.storage.add_message('Liked %s out of %s profiles so far...' % (profiles_scanned, limit))
 
-                if profiles_liked >= profiles_to_like:
-                    self.storage.add_message(terminate_message % (profiles_liked, profiles_to_like))
+                if profiles_scanned >= limit:
+                    self.storage.add_message(terminate_message % (profiles_scanned, limit))
                     return
 
                 time.sleep(1)  # sleep before liking
 
                 if user.city in self.cities_to_match:
                     if self.like_user(user=user):
-                        profiles_liked += 1
+                        profiles_scanned += 1
                 else:
                     self.pass_user(user=user, reason='user is in %s' % user.city)
 

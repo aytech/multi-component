@@ -1,19 +1,22 @@
 import os
+import sys
 
 from db.PostgresStorage import PostgresStorage
 from utilities.TinderProcessor import TinderProcessor
 
 AUTH_TOKEN = os.environ['AUTH_TOKEN']
-NAME_TO_LIKE = os.environ['NAME_TO_LIKE']
-PROFILES_TO_LIKE = int(os.environ.get('PROFILES_TO_LIKE', default=10))
-PROFILES_TO_CHECK = int(os.environ.get('PROFILES_TO_CHECK', default=10))  # how many profiles to check to find like
+NAME_TO_FIND = os.environ['NAME_TO_FIND']
+BATCH_LIKE_LIMIT = int(os.environ.get('PROFILES_TO_LIKE', default=10))
+BATCH_FIND_LIMIT = int(os.environ.get('PROFILES_TO_CHECK', default=10))
 
 if __name__ == '__main__':
+    args = sys.argv[1:]
     storage_session = PostgresStorage()
     processor = TinderProcessor(storage=storage_session, auth_token=AUTH_TOKEN)
 
-    storage_session.add_message(message='Processing %s as next like with limit %s, also %s profiles to like.' % (
-        NAME_TO_LIKE, PROFILES_TO_CHECK, PROFILES_TO_LIKE))
-
-    processor.process_next_like(name_to_like=NAME_TO_LIKE, profiles_to_check=PROFILES_TO_CHECK)
-    processor.process_local_likes(profiles_to_like=PROFILES_TO_LIKE)
+    if len(args) >= 1 and args[0] == 'batch_find':
+        processor.process_batch_scan(target_profile_name=NAME_TO_FIND, limit=BATCH_FIND_LIMIT)
+    if len(args) >= 2 and args[1] == 'batch_like':
+        processor.process_batch_likes(limit=BATCH_LIKE_LIMIT)
+    if len(args) >= 3 and args[2] == 'like_profile':
+        print('Processing like profile')

@@ -23,10 +23,10 @@ services:
     volumes:
       - .:/app
     environment:
-      - AUTH_TOKEN=36174a4d-9c5f-4e69-a0ce-d74ba94ad5d6
-      - NAME_TO_LIKE=Svetlana
-      - PROFILES_TO_CHECK=100
-      - PROFILES_TO_LIKE=5
+      - AUTH_TOKEN=42416804-7d6f-45c0-941e-99d049aef4ee
+      - NAME_TO_FIND=Svetlana # name to find during batch scan
+      - BATCH_FIND_LIMIT=100 # how many profiles to check to find like
+      - BATCH_LIKE_LIMIT=10 # how many profiles to like before exiting
   #      - NAME_TO_LIKE=Diane
   #      - NAME_TO_LIKE=Eli
   #      - NAME_TO_LIKE=MICHAELA
