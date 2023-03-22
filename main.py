@@ -19,4 +19,4 @@ if __name__ == '__main__':
     if len(args) >= 2 and args[1] == 'batch_like':
         processor.process_batch_likes(limit=BATCH_LIKE_LIMIT)
     if len(args) >= 3 and args[2] == 'like_profile':
-        print('Processing like profile')
+        print('Processing like profile, to be implemented...')

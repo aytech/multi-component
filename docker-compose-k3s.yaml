@@ -3,6 +3,7 @@ name: "cluster"
 
 services:
   ubuntu:
+    build:
+      context: .
+      dockerfile: Dockerfile-k3s
     container_name: jammy
-    image: ubuntu:jammy
-    entrypoint: ["tail", "-f", "/dev/null"]

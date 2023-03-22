@@ -55,7 +55,7 @@ class TinderProcessor:
             try:
                 results = self.get_batch_profile_data()
             except CommunicationError as e:
-                self.storage.add_message(e.message)
+                self.storage.add_message('Terminating batch scan, reason: %s' % e.message)
                 return
 
             for user in results.users:
@@ -93,7 +93,7 @@ class TinderProcessor:
             try:
                 results = self.get_batch_profile_data()
             except CommunicationError as e:
-                self.storage.add_message(e.message)
+                self.storage.add_message('Terminating batch likes, reason: %s' % e.message)
                 return
 
             for user in results.users:
