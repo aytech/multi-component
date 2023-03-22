@@ -5,6 +5,7 @@ from requests import JSONDecodeError
 
 from db.PostgresStorage import PostgresStorage
 from db.dao import UserDao
+from utilities.CommunicationError import CommunicationError
 from utilities.Results import Results
 
 
@@ -15,6 +16,10 @@ class TinderProcessor:
     request_headers: dict
     storage: PostgresStorage
 
+    @staticmethod
+    def is_timeout(response_data) -> bool:
+        return 'data' in response_data and 'timeout' in response_data['data']
+
     def get_batch_profile_data(self) -> Results:
         list_url = 'https://api.gotinder.com/v2/recs/core'
         self.storage.add_message('Retrieving batch profile data')
@@ -23,14 +28,16 @@ class TinderProcessor:
             data = response.json()
             if 'data' in data and 'results' in data['data']:
                 return Results(response.json())
+            elif self.is_timeout(response_data=data):
+                raise CommunicationError(message='Timeout received while fetching profile data: %s' % data)
             else:
-                self.exit_if_timeout(data)
+                raise CommunicationError(message='Unknown error occurred while fetching profile data: %s' % data)
         except JSONDecodeError as e:
             if response.status_code == 401:
-                self.storage.add_message('Failed to fetch batch data, not authorized')
+                message = 'Failed to fetch batch data, not authorized'
             else:
-                self.storage.add_message('Failed to fetch batch data, reason: %s' % e)
-        return Results()
+                message = 'Failed to fetch batch data, reason: %s' % e
+            raise CommunicationError(message=message)
 
     def process_next_like(self, name_to_like, profiles_to_check: int = 10):
 
@@ -45,7 +52,11 @@ class TinderProcessor:
                     profiles_checked, profiles_to_check))
                 return
 
-            results = self.get_batch_profile_data()
+            try:
+                results = self.get_batch_profile_data()
+            except CommunicationError as e:
+                self.storage.add_message(e.message)
+                return
 
             for user in results.users:
 
@@ -80,7 +91,11 @@ class TinderProcessor:
                 self.storage.add_message(terminate_message % (profiles_liked, profiles_to_like))
                 return
 
-            results = self.get_batch_profile_data()
+            try:
+                results = self.get_batch_profile_data()
+            except CommunicationError as e:
+                self.storage.add_message(e.message)
+                return
 
             for user in results.users:
 
@@ -125,14 +140,6 @@ class TinderProcessor:
             message = 'User %s (%s) is passed with status code %s, reason: %s'
             self.storage.add_message(message % (user.name, user.user_id, response.json()['status'], reason))
             return True
-
-    def exit_if_timeout(self, response_data):
-        if 'data' in response_data:
-            if 'timeout' in response_data['data']:
-                timeout_seconds = int(response_data['data']['timeout'] / 1000)
-                message = 'Terminating as probably run out of possible matches, timeout of %s seconds received'
-                self.storage.add_message(message % timeout_seconds)
-                exit(0)
 
     def __init__(self, storage: PostgresStorage, auth_token: str):
         self.storage = storage
