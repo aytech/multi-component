@@ -112,8 +112,13 @@ class TinderProcessor:
                 else:
                     self.pass_user(user=user, reason='user is in %s' % user.city)
 
-    def like_user(self, user: UserDao) -> bool:
-        if self.storage.get_user(user_id=user.user_id) is not None:
+    def like_profile(self, user_name: str) -> None:
+        for user in self.storage.get_users_by_name(user_name=user_name):
+            self.storage.add_message('Processing explicit like for user %s (%s)' % (user.name, user.user_id))
+            self.like_user(user=user, force=True)
+
+    def like_user(self, user: UserDao, force: bool = False) -> bool:
+        if force is False and self.storage.get_user(user_id=user.user_id) is not None:
             self.storage.add_message('User %s (%s) is already liked!!!' % (user.name, user.user_id))
             return False
         else:
@@ -122,7 +127,8 @@ class TinderProcessor:
                 'liked_content_id': user.photos[0].photo_id,
                 'liked_content_type': 'photo'
             })
-            self.storage.add_user(user=user)
+            if force is False:
+                self.storage.add_user(user=user)
             message = 'User %s (%s) is liked with status %s'
             self.storage.add_message(message % (user.name, user.user_id, response.json()['status']))
             return True

@@ -6,9 +6,9 @@ services:
     container_name: storage
     image: postgres
     environment:
-      POSTGRES_DB: tinder
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: oleg
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
     ports:
       - "5432:5432"
     volumes:
@@ -23,19 +23,19 @@ services:
     volumes:
       - .:/app
     environment:
-      - AUTH_TOKEN=42416804-7d6f-45c0-941e-99d049aef4ee
-      - NAME_TO_FIND=Svetlana # name to find during batch scan
-      - NAME_TO_LIKE= # name to find in local DB and send like
-      - BATCH_FIND_LIMIT=100 # how many profiles to check to find like
-      - BATCH_LIKE_LIMIT=10 # how many profiles to like before exiting
+      - AUTH_TOKEN=${AUTH_TOKEN}
+      - NAME_TO_FIND=${NAME_TO_FIND} # name to find during batch scan
+      - NAME_TO_LIKE=${NAME_TO_LIKE} # name to find in local DB and send like
+      - BATCH_FIND_LIMIT=${BATCH_FIND_LIMIT} # how many profiles to check to find like
+      - BATCH_LIKE_LIMIT=${BATCH_LIKE_LIMIT} # how many profiles to like before exiting
   #      - NAME_TO_LIKE=Diane
   #      - NAME_TO_LIKE=Eli
   #      - NAME_TO_LIKE=MICHAELA
 #  pg-admin:
 #    image: dpage/pgadmin4
 #    environment:
-#      - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
-#      - PGADMIN_DEFAULT_PASSWORD=postgres
+#      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+#      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
 #    ports:
 #      - "8888:80"
 #    depends_on:

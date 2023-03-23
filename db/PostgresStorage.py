@@ -12,23 +12,36 @@ from db.models import User, Log, Photo
 class PostgresStorage:
     session: Session
 
+    @staticmethod
+    def get_user_dao(user: User) -> UserDao:
+        user_dao: UserDao = UserDao(
+            city=user.city,
+            name=user.name,
+            s_number=user.s_number,
+            user_id=user.user_id
+        )
+        user_dao.photos = [PhotoDao(
+            photo_id=photo.photo_id,
+            url=photo.url
+        ) for photo in user.photos]
+        return user_dao
+
     def get_user(self, user_id: str) -> Optional[UserDao]:
         statement = select(User).where(User.user_id == user_id)
         try:
-            user: User = self.session.scalars(statement=statement).one()
-            user_dao: UserDao = UserDao(
-                city=user.city,
-                name=user.name,
-                s_number=user.s_number,
-                user_id=user.user_id
-            )
-            user_dao.photos = [PhotoDao(
-                photo_id=photo.photo_id,
-                url=photo.url
-            ) for photo in user.photos]
-            return user_dao
+            return self.get_user_dao(self.session.scalars(statement=statement).one())
         except NoResultFound:
             return None
+
+    def get_users_by_name(self, user_name: str) -> list[UserDao]:
+        statement = select(User).where(User.name == user_name)
+        users: list[UserDao] = []
+        try:
+            for user in self.session.scalars(statement=statement).all():
+                users.append(self.get_user_dao(user))
+        except NoResultFound:
+            pass
+        return users
 
     def add_user(self, user: UserDao):
         creation_date = datetime.datetime.now()
