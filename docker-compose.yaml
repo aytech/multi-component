@@ -15,9 +15,7 @@ services:
       - ./data:/var/lib/postgresql/data
       - ./db_init:/docker-entrypoint-initdb.d
   runner:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ole-ya/tinder
     depends_on:
       - db
     volumes:
