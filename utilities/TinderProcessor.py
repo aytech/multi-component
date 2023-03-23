@@ -41,6 +41,8 @@ class TinderProcessor:
 
     def process_batch_scan(self, target_profile_name: str, limit: int = 10):
 
+        self.storage.add_message('Processing batch scan for user %s, with limit %s' % (target_profile_name, limit))
+
         profiles_scanned = 0
 
         while True:
@@ -79,6 +81,8 @@ class TinderProcessor:
 
     def process_batch_likes(self, limit: int = 10):
 
+        self.storage.add_message('Processing batch likes, with limit %s' % limit)
+
         profiles_scanned = 0
         terminate_message = 'Terminating like process, as already liked %s profiles out of %s'
 
@@ -113,9 +117,18 @@ class TinderProcessor:
                     self.pass_user(user=user, reason='user is in %s' % user.city)
 
     def like_profile(self, user_name: str) -> None:
-        for user in self.storage.get_users_by_name(user_name=user_name):
-            self.storage.add_message('Processing explicit like for user %s (%s)' % (user.name, user.user_id))
-            self.like_user(user=user, force=True)
+        self.storage.add_message('Processing explicit like for user %s' % user_name)
+        users: list[UserDao] = self.storage.get_users_by_name(user_name=user_name)
+        if len(users) < 1:
+            self.storage.add_message('No profile is found for user %s' % user_name)
+        elif len(users) > 1:
+            self.storage.add_message(
+                'More than one profile (%s) found for user %s, liking all...' % (len(users), user_name))
+            for user in users:
+                self.like_user(user=user, force=True)
+        else:
+            self.storage.add_message('Exactly one profile is found for user %s, sending like...' % user_name)
+            self.like_user(user=users[0], force=True)
 
     def like_user(self, user: UserDao, force: bool = False) -> bool:
         if force is False and self.storage.get_user(user_id=user.user_id) is not None:
