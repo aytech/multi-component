@@ -24,3 +24,10 @@ class UserDao:
         self.name = name
         self.s_number = s_number
         self.user_id = user_id
+
+
+class UserTeaserDao:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name

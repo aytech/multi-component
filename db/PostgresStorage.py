@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from db.dao import UserDao, PhotoDao
+from db.dao import UserDao, PhotoDao, UserTeaserDao
 from db.models import User, Log, Photo
 
 
@@ -33,8 +33,8 @@ class PostgresStorage:
         except NoResultFound:
             return None
 
-    def get_users_by_name(self, user_name: str) -> list[UserDao]:
-        statement = select(User).where(User.name == user_name)
+    def get_users_by_name(self, name: str) -> list[UserDao]:
+        statement = select(User).where(User.name == name)
         users: list[UserDao] = []
         try:
             for user in self.session.scalars(statement=statement).all():
@@ -60,14 +60,15 @@ class PostgresStorage:
             ))
             session.commit()
 
-    def add_message(self, message: str):
-        print('Logging message: %s' % message)
-        with self.session as session:
-            session.add(Log(
-                created=datetime.datetime.now(),
-                text=message
-            ))
-            session.commit()
+    def add_message(self, message: str, persist: bool = False):
+        print('[DEBUG]: %s' % message)
+        if persist:
+            with self.session as session:
+                session.add(Log(
+                    created=datetime.datetime.now(),
+                    text=message
+                ))
+                session.commit()
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://oleg:postgres@storage/tinder')

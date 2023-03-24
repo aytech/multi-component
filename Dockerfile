@@ -12,4 +12,4 @@ RUN python -m pip install --upgrade pip
 COPY ./requirements.txt ./requirements.txt
 RUN pip install -r ./requirements.txt
 
-ENTRYPOINT [ "python", "-u", "main.py", "batch_find", "batch_like", "like_profile" ]
+ENTRYPOINT [ "python", "-u", "main.py" ]

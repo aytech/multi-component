@@ -14,12 +14,12 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = 'user'
 
-    city: Mapped[str] = mapped_column(String(20))
+    city: Mapped[str] = mapped_column(String(100))
     created: Mapped[datetime.datetime]
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(20))
+    name: Mapped[str] = mapped_column(String(100))
     s_number: Mapped[int] = mapped_column(BigInteger)
-    user_id: Mapped[str] = mapped_column(String(20))
+    user_id: Mapped[str] = mapped_column(String(100))
 
     photos: Mapped[List['Photo']] = relationship(
         back_populates='user', cascade='all, delete-orphan',
@@ -37,7 +37,7 @@ class Photo(Base):
 
     created: Mapped[datetime.datetime]
     id: Mapped[int] = mapped_column(primary_key=True)
-    photo_id: Mapped[str] = mapped_column(String(20))
+    photo_id: Mapped[str] = mapped_column(String(100))
     url: Mapped[str] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
 

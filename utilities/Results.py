@@ -1,71 +1,67 @@
-from db.dao import UserDao, PhotoDao
+from typing import Optional
+
+from requests import JSONDecodeError
+
+from db.dao import UserDao, PhotoDao, UserTeaserDao
+from utilities.errors.AuthorisationError import AuthorisationError
+from utilities.errors.GenericError import GenericError
+from utilities.errors.TimeoutReceivedError import TimeoutReceivedError
 
 
 class Results:
-    users: list[UserDao] = []
 
-    def __init__(self, raw_data=None):
-        if raw_data is None or 'data' not in raw_data:
-            return
-        if 'results' not in raw_data['data']:
-            return
-        for user in raw_data['data']['results']:
-            if 'type' not in user:
-                return
-            if user['type'] != 'user':
-                return
-            if 'user' not in user:
-                return
+    @staticmethod
+    def process_raw_data(raw_data=None) -> dict:
+        try:
+            data = raw_data.json()
+        except JSONDecodeError as e:
+            if raw_data.status_code == 401:
+                raise AuthorisationError()
+            else:
+                raise GenericError(reason=e.response)
+        if data is None:
+            raise GenericError(reason='Response data is null')
+        if 'data' not in data:
+            raise GenericError(reason=data)
+        if 'timeout' in data['data']:
+            raise TimeoutReceivedError(reason=data)
+        return data['data']
+
+    @staticmethod
+    def user_list(raw_data=None) -> list[UserDao]:
+        data = Results.process_raw_data(raw_data=raw_data)
+        users: list[UserDao] = []
+        if 'results' not in data:
+            return users
+        for result in data['results']:
+            if 'type' not in result:
+                return users
+            if result['type'] != 'user':
+                return users
+            if 'user' not in result:
+                return users
             new_user = UserDao(
-                name=user['user']['name'],
-                s_number=user['s_number'],
-                user_id=user['user']['_id'])
-            if 'city' in user['user']:
-                new_user.city = user['user']['city']['name']
-            if 'photos' in user['user']:
+                name=result['user']['name'],
+                s_number=result['s_number'],
+                user_id=result['user']['_id'])
+            if 'city' in result['user']:
+                new_user.city = result['user']['city']['name']
+            if 'photos' in result['user']:
                 photos = []
-                for photo in user['user']['photos']:
+                for photo in result['user']['photos']:
                     photos.append(PhotoDao(
                         photo_id=photo['id'],
                         url=photo['url']
                     ))
                 new_user.photos = photos
-            self.users.append(new_user)
+            users.append(new_user)
+        return users
 
-
-'''
-Raw data example:
-{
-  "results": [
-    {
-      "type": "user",
-      "user": {
-        "_id": "54735a13599e187310e31bdf",
-        "badges": [],
-        "bio": "Hudba, příroda, šachy - nemusíš být šachista, stačí, když ...to tam bude 🙂\n",
-        "birth_date": "1979-03-20T08:24:54.675Z",
-        "city": {
-            "name": "Pardubice"
-        },
-        "name": "Monika",
-        "photos": [
-          {
-            "id": "7cce90b0-b039-43a2-9209-c5687dc13978",
-            "url": "...",
-            "fileName": "7cce90b0-b039-43a2-9209-c5687dc13978.jpg",
-            "extension": "jpg",
-            "assets": [],
-            "media_type": "image"
-          },
-          ...
-        ],
-        ...
-      },
-      "distance_mi": 4,
-      "content_hash": "R1LfemsnECrwF3rcxRIZjcL6UEAt3UR0txViZjUdZuAxIpD",
-      "s_number": 7851887500488879,
-      ...
-    },
-  ]
-}
-'''
+    @staticmethod
+    def teaser_user(raw_data=None) -> Optional[UserTeaserDao]:
+        data = Results.process_raw_data(raw_data=raw_data)
+        if 'recently_active' not in data:
+            return None
+        if 'name' not in data['recently_active']:
+            return None
+        return UserTeaserDao(name=data['recently_active']['name'])
