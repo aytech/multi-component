@@ -12,5 +12,5 @@ if __name__ == '__main__':
     processor = TinderProcessor(storage=storage_session, auth_token=AUTH_TOKEN)
 
     processor.check_teaser_profile()
-    processor.process_daily_likes()
     processor.collect_profiles()
+    processor.process_daily_likes()
