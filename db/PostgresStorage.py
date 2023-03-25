@@ -1,12 +1,12 @@
 import datetime
 from typing import Optional
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from db.dao import UserDao, PhotoDao, UserTeaserDao
-from db.models import User, Log, Photo
+from db.dao import UserDao, PhotoDao
+from db.models import User, Log, Photo, Settings
 
 
 class PostgresStorage:
@@ -45,30 +45,47 @@ class PostgresStorage:
 
     def add_user(self, user: UserDao):
         creation_date = datetime.datetime.now()
-        with self.session as session:
-            session.add(User(
-                city=user.city,
+        self.session.add(User(
+            city=user.city,
+            created=creation_date,
+            name=user.name,
+            photos=[Photo(
                 created=creation_date,
-                name=user.name,
-                photos=[Photo(
-                    created=creation_date,
-                    photo_id=photo.photo_id,
-                    url=photo.url
-                ) for photo in user.photos],
-                s_number=user.s_number,
-                user_id=user.user_id
-            ))
-            session.commit()
+                photo_id=photo.photo_id,
+                url=photo.url
+            ) for photo in user.photos],
+            s_number=user.s_number,
+            user_id=user.user_id
+        ))
+        self.session.commit()
 
     def add_message(self, message: str, persist: bool = False):
         print('[DEBUG]: %s' % message)
         if persist:
-            with self.session as session:
-                session.add(Log(
-                    created=datetime.datetime.now(),
-                    text=message
-                ))
-                session.commit()
+            self.session.add(Log(
+                created=datetime.datetime.now(),
+                text=message
+            ))
+            self.session.commit()
+
+    def record_daily_like_run(self):
+        time_stamp = datetime.datetime.now()
+        setting_model = self.get_daily_run_setting()
+
+        if setting_model is None:
+            self.session.add(Settings(
+                created=time_stamp,
+                name=Settings.daily_run_table_name,
+                value=time_stamp
+            ))
+            self.session.commit()
+        else:
+            self.session.execute(update(Settings).where(Settings.id == setting_model.id).values(value=time_stamp))
+
+    def get_daily_run_setting(self) -> Optional[Settings]:
+        setting_name: str = Settings.daily_run_table_name
+        select_statement = select(Settings).where(Settings.name == setting_name)
+        return self.session.scalars(statement=select_statement).one_or_none()
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://oleg:postgres@storage/tinder')

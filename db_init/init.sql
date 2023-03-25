@@ -17,6 +17,13 @@ CREATE TABLE IF NOT EXISTS public.photo (
         REFERENCES public.user(id)
 );
 
+CREATE TABLE IF NOT EXISTS public.settings (
+    created TIMESTAMP,
+    id serial PRIMARY KEY,
+    name VARCHAR(100),
+    value VARCHAR(100)
+);
+
 CREATE TABLE IF NOT EXISTS public.log (
     created TIMESTAMP,
     id serial PRIMARY KEY,

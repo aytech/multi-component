@@ -1,18 +1,18 @@
-import datetime
 import time
+from datetime import datetime
 from typing import Optional
 
 import requests
 
 from db.PostgresStorage import PostgresStorage
 from db.dao import UserDao, UserTeaserDao
+from db.models import Settings
 from utilities.Results import Results
 from utilities.errors.BaseError import BaseError
 
 
 class TinderProcessor:
     base_url: str = 'https://api.gotinder.com'
-    missed_profile_limit: int = 200
     storage: PostgresStorage
     request_headers: dict
 
@@ -28,7 +28,7 @@ class TinderProcessor:
                                 headers=self.request_headers)
         return Results.teaser_user(raw_data=response)
 
-    def collect_profiles(self):
+    def collect_profiles(self, limit: int = 10):
 
         profiles_added = 0
         profiles_missed = 0
@@ -50,15 +50,25 @@ class TinderProcessor:
                     profiles_missed += 1
                 self.storage.add_message(message % (user.name, user.user_id))
 
-            if profiles_missed >= self.missed_profile_limit:
-                message = 'Terminating collecting profiles, missed limit reached, time: %s'
-                self.storage.add_message(message=message % datetime.datetime.now(), persist=True)
+            if profiles_missed >= limit:
+                self.storage.add_message(message='Terminating collecting profiles, as predefined limit reached')
                 return
 
-    def process_daily_likes(self) -> None:
+    def process_daily_likes(self, limit: int = 10) -> None:
 
         profiles_liked = 0
         profiles_missed = 0
+
+        last_run_record: Optional[Settings] = self.storage.get_daily_run_setting()
+
+        if last_run_record is not None:
+            last_run_time = datetime.strptime(last_run_record.value, '%Y-%m-%d %H:%M:%S.%f')
+            current_time = datetime.now()
+            hours_since_last_run: int = (current_time - last_run_time).seconds // 3600
+            if hours_since_last_run < 12:
+                message = 'Only %s hours passed since last likes run, skipping...'
+                self.storage.add_message(message % hours_since_last_run)
+                return
 
         while True:
             try:
@@ -71,16 +81,15 @@ class TinderProcessor:
                 time.sleep(1)  # wait between likes
                 if self.like_user(user=user):
                     profiles_liked += 1
+                    profiles_missed = 0  # reset missed, the limit should only apply on consecutive misses
                     self.storage.add_message('Liked %s profiles so far...' % profiles_liked, persist=True)
                 else:
                     profiles_missed += 1
 
-            # Looks like Tinder API stops giving new profiles when out of likes,
-            # so exit after 200 misses
-            # TODO: record last processing date and implement logic to start next batch in 12 hours
-            if profiles_missed >= self.missed_profile_limit:
-                message = 'Terminating daily likes, as likely run out of likes, time: %s'
-                self.storage.add_message(message=message % datetime.datetime.now(), persist=True)
+            # Looks like Tinder API stops giving new profiles when out of likes, so should be limited
+            if profiles_missed >= limit:
+                self.storage.add_message(message='Terminating daily likes, as likely run out of likes')
+                self.storage.record_daily_like_run()
                 return
 
     def check_teaser_profile(self) -> None:

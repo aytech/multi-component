@@ -50,6 +50,19 @@ class Photo(Base):
         '''
 
 
+class Settings(Base):
+    __tablename__ = 'settings'
+    daily_run_table_name = 'daily_like_last_run'
+
+    created: Mapped[datetime.datetime]
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    value: Mapped[str] = mapped_column(String(100))
+
+    def __repr__(self):
+        return f'Settings(created={self.created!r}, id={self.id!r}, name={self.name!r}, value={self.value!r})'
+
+
 class Log(Base):
     __tablename__ = 'log'
 
