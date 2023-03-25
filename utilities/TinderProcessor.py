@@ -43,7 +43,7 @@ class TinderProcessor:
                 return True
         return False  # likes not exhausted if setting is not found
 
-    def collect_profiles(self, limit: int = 10):
+    def collect_profiles(self, limit: int = 10) -> None:
 
         profiles_added = 0
         profiles_missed = 0
@@ -59,7 +59,6 @@ class TinderProcessor:
                 if self.storage.get_user(user_id=user.user_id) is None:
                     self.storage.add_user(user=user)
                     profiles_added += 1
-                    profiles_missed = 0  # reset missed, the limit should only apply on consecutive misses
                     self.storage.add_message('User %s (%s) added to the system' % (user.name, user.user_id))
                 else:
                     profiles_missed += 1
@@ -89,7 +88,6 @@ class TinderProcessor:
                 time.sleep(1)  # wait between likes
                 if self.like_user(user=user):
                     profiles_liked += 1
-                    profiles_missed = 0  # reset missed, the limit should only apply on consecutive misses
                     self.storage.add_message('Liked %s profiles so far' % profiles_liked, persist=True)
                 else:
                     profiles_missed += 1
@@ -116,57 +114,46 @@ class TinderProcessor:
         if teaser_profile is not None:
             local_profiles: list[UserDao] = self.storage.get_users_by_name(name=teaser_profile.name)
             if len(local_profiles) == 0:
-                message: str = 'Teaser profile(s) for %s not found locally, exiting...'
-                self.storage.add_message(message=message % teaser_profile.name, persist=True)
-                return
+                message: str = 'Teaser profile(s) for %s not found locally, skipping...'
+                self.storage.add_message(message=message % teaser_profile.name, persist=False)
             else:
                 message: str = '%s teaser profile(s) for %s found locally, sending like(s)...'
-                self.storage.add_message(message=message % teaser_profile.name, persist=True)
+                self.storage.add_message(message=message % (len(local_profiles), teaser_profile.name), persist=False)
                 for profile in local_profiles:
-                    self.like_user(user=profile, force=True)
+                    self.like_user(user=profile)
 
-        # Process other profiles as defined
+        # Process other teaser profiles as defined
         if other_teaser_name is not None:
             other_profiles: list[UserDao] = self.storage.get_users_by_name(name=other_teaser_name)
             if len(other_profiles) == 0:
-                message: str = 'Other teaser profile(s) for %s not found locally, exiting...'
-                self.storage.add_message(message=message % other_teaser_name, persist=True)
-                return
+                message: str = 'Other teaser profile(s) for %s not found locally, skipping...'
+                self.storage.add_message(message=message % other_teaser_name, persist=False)
             else:
                 message: str = '%s of other teaser profile(s) for %s found locally, sending like(s)...'
-                self.storage.add_message(message=message % other_teaser_name, persist=True)
+                self.storage.add_message(message=message % (len(other_profiles), other_teaser_name), persist=False)
                 for profile in other_profiles:
-                    self.like_user(user=profile, force=True)
+                    self.like_user(user=profile)
 
-    def like_user(self, user: UserDao, force: bool = False) -> bool:
-        if force is False and self.storage.get_user(user_id=user.user_id) is not None:
-            self.storage.add_message('User %s (%s) is already liked!!!' % (user.name, user.user_id))
-            return False
-        else:
-            response = requests.post('%s/like/%s' % (self.base_url, user.user_id), headers=self.request_headers, json={
-                's_number': user.s_number,
-                'liked_content_id': user.photos[0].photo_id,
-                'liked_content_type': 'photo'
-            })
-            if force is False:
-                self.storage.add_user(user=user)
-            message = 'User %s (%s) is liked with status %s'
-            response_status = response.json()['status']
-            self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
-            return True
+    def like_user(self, user: UserDao) -> bool:
+        user_local: Optional[UserDao] = self.storage.get_user_by_user_id(user_id=user.user_id)
 
-    def pass_user(self, user: UserDao, reason: str) -> bool:
-        if self.storage.get_user(user_id=user.user_id):
-            self.storage.add_message('User %s (%s) is already passed!!!' % (user.name, user.user_id))
+        if user_local is not None and user_local.liked is True:
+            self.storage.add_message(message='User %s (%s) is already liked!!!' % (user.name, user.user_id))
             return False
-        else:
-            response = requests.get('%s/pass/%s' % (self.base_url, user.user_id), headers=self.request_headers,
-                                    params={'s_number': user.s_number})
+
+        if user_local is None:
             self.storage.add_user(user=user)
-            message = 'User %s (%s) is passed with status code %s, reason: %s'
-            response_status = response.json()['status']
-            self.storage.add_message(message=message % (user.name, user.user_id, response_status, reason), persist=True)
-            return True
+
+        response = requests.post('%s/like/%s' % (self.base_url, user.user_id), headers=self.request_headers, json={
+            's_number': user.s_number,
+            'liked_content_id': user.photos[0].photo_id,
+            'liked_content_type': 'photo'
+        })
+        message = 'User %s (%s) is liked with status %s'
+        response_status = response.json()['status']
+        self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
+        self.storage.update_user_like_status(user_id=user.user_id, status=True)
+        return True
 
     def __init__(self, storage: PostgresStorage, auth_token: str):
         self.storage = storage

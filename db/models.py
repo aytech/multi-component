@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-from sqlalchemy import String, ForeignKey, TIMESTAMP, BigInteger
+from sqlalchemy import String, ForeignKey, TIMESTAMP, BigInteger, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 
 
@@ -17,6 +17,7 @@ class User(Base):
     city: Mapped[str] = mapped_column(String(100))
     created: Mapped[datetime.datetime]
     id: Mapped[int] = mapped_column(primary_key=True)
+    liked: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String(100))
     s_number: Mapped[int] = mapped_column(BigInteger)
     user_id: Mapped[str] = mapped_column(String(100))

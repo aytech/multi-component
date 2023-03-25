@@ -14,12 +14,14 @@ class PhotoDao:
 class UserDao:
     city: Optional[str]
     created: str
+    liked: bool
     name: str
     photos: list[PhotoDao]
     s_number: int
     user_id: str
 
-    def __init__(self, name: str, s_number: int, user_id: str, city: Optional[str] = None):
+    def __init__(self, liked: bool, name: str, s_number: int, user_id: str, city: Optional[str] = None):
+        self.liked = liked
         self.city = city
         self.name = name
         self.s_number = s_number

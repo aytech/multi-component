@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS public.user (
     city VARCHAR(100),
     created TIMESTAMP,
     id serial PRIMARY KEY,
+    liked BOOLEAN DEFAULT FALSE,
     name VARCHAR(100),
     s_number BIGINT,
     user_id VARCHAR(100) NOT NULL

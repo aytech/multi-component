@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional
 
-from sqlalchemy import create_engine, select, update
+from sqlalchemy import create_engine, select, update, Select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,7 @@ class PostgresStorage:
     def get_user_dao(user: User) -> UserDao:
         user_dao: UserDao = UserDao(
             city=user.city,
+            liked=user.liked,
             name=user.name,
             s_number=user.s_number,
             user_id=user.user_id
@@ -34,14 +35,18 @@ class PostgresStorage:
             return None
 
     def get_users_by_name(self, name: str) -> list[UserDao]:
-        statement = select(User).where(User.name == name)
         users: list[UserDao] = []
-        try:
-            for user in self.session.scalars(statement=statement).all():
-                users.append(self.get_user_dao(user))
-        except NoResultFound:
-            pass
+        statement: Select = select(User).where(User.name == name)
+        for user in self.session.scalars(statement=statement).all():
+            users.append(self.get_user_dao(user=user))
         return users
+
+    def get_user_by_user_id(self, user_id: str) -> Optional[UserDao]:
+        statement = select(User).where(User.user_id == user_id)
+        try:
+            return self.get_user_dao(self.session.scalars(statement=statement).one())
+        except NoResultFound:
+            return None
 
     def add_user(self, user: UserDao):
         creation_date = datetime.datetime.now()
@@ -49,6 +54,7 @@ class PostgresStorage:
             session.add(User(
                 city=user.city,
                 created=creation_date,
+                liked=user.liked,
                 name=user.name,
                 photos=[Photo(
                     created=creation_date,
@@ -85,6 +91,11 @@ class PostgresStorage:
             else:
                 session.execute(
                     statement=update(Settings).where(Settings.id == setting_model.id).values(value=str(time_stamp)))
+            session.commit()
+
+    def update_user_like_status(self, user_id: str, status: bool):
+        with self.session as session:
+            session.execute(statement=update(User).where(User.user_id == user_id).values(liked=status))
             session.commit()
 
     def get_daily_run_setting(self) -> Optional[Settings]:

@@ -41,6 +41,7 @@ class Results:
             if 'user' not in result:
                 return users
             new_user = UserDao(
+                liked=False,
                 name=result['user']['name'],
                 s_number=result['s_number'],
                 user_id=result['user']['_id'])
