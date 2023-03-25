@@ -45,42 +45,47 @@ class PostgresStorage:
 
     def add_user(self, user: UserDao):
         creation_date = datetime.datetime.now()
-        self.session.add(User(
-            city=user.city,
-            created=creation_date,
-            name=user.name,
-            photos=[Photo(
+        with self.session as session:
+            session.add(User(
+                city=user.city,
                 created=creation_date,
-                photo_id=photo.photo_id,
-                url=photo.url
-            ) for photo in user.photos],
-            s_number=user.s_number,
-            user_id=user.user_id
-        ))
-        self.session.commit()
+                name=user.name,
+                photos=[Photo(
+                    created=creation_date,
+                    photo_id=photo.photo_id,
+                    url=photo.url
+                ) for photo in user.photos],
+                s_number=user.s_number,
+                user_id=user.user_id
+            ))
+            session.commit()
 
     def add_message(self, message: str, persist: bool = False):
         print('[DEBUG]: %s' % message)
         if persist:
-            self.session.add(Log(
-                created=datetime.datetime.now(),
-                text=message
-            ))
-            self.session.commit()
+            with self.session as session:
+                session.add(Log(
+                    created=datetime.datetime.now(),
+                    text=message
+                ))
+                session.commit()
 
     def record_daily_like_run(self):
         time_stamp = datetime.datetime.now()
         setting_model = self.get_daily_run_setting()
 
-        if setting_model is None:
-            self.session.add(Settings(
-                created=time_stamp,
-                name=Settings.daily_run_table_name,
-                value=time_stamp
-            ))
-            self.session.commit()
-        else:
-            self.session.execute(update(Settings).where(Settings.id == setting_model.id).values(value=time_stamp))
+        with self.session as session:
+            if setting_model is None:
+                session.add(Settings(
+                    created=time_stamp,
+                    name=Settings.daily_run_table_name,
+                    value=str(time_stamp)
+                ))
+                session.commit()
+            else:
+                session.execute(
+                    statement=update(Settings).where(Settings.id == setting_model.id).values(value=str(time_stamp)))
+            session.commit()
 
     def get_daily_run_setting(self) -> Optional[Settings]:
         setting_name: str = Settings.daily_run_table_name
