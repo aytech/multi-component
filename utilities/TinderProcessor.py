@@ -45,6 +45,7 @@ class TinderProcessor:
                     self.storage.add_user(user=user)
                     message = 'User %s (%s) added to the system'
                     profiles_added += 1
+                    profiles_missed = 0  # reset missed, the limit should only apply on consecutive misses
                 else:
                     message = 'User %s (%s) is already in the system'
                     profiles_missed += 1
