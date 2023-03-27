@@ -47,26 +47,29 @@ class TinderProcessor:
 
         profiles_added = 0
         profiles_missed = 0
+        terminate_message: str = 'Terminating collecting profiles, as limit of %s reached, added %s new users'
 
         while True:
             try:
                 results: list[UserDao] = self.get_batch_profile_data()
             except BaseError as e:
                 self.storage.add_message(message=e.message, persist=True)
+                self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
                 return
 
             for user in results:
                 if self.storage.get_user(user_id=user.user_id) is None:
                     self.storage.add_user(user=user)
                     profiles_added += 1
-                    self.storage.add_message('User %s (%s) added to the system' % (user.name, user.user_id))
+                    message: str = 'User %s (%s) added to the system'
+                    self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
                 else:
                     profiles_missed += 1
                     message = 'User %s (%s) is already in the system, missed %s so far, limit: %s'
-                    self.storage.add_message(message % (user.name, user.user_id, profiles_missed, limit))
+                    self.storage.add_message(message=message % (user.name, user.user_id, profiles_missed, limit))
 
             if profiles_missed >= limit:
-                self.storage.add_message(message='Terminating collecting profiles, as predefined limit reached')
+                self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
                 return
 
     def process_daily_likes(self, limit: int = 10) -> None:
