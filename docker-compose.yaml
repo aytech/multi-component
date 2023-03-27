@@ -22,5 +22,6 @@ services:
       - .:/app
     environment:
       - AUTH_TOKEN=${AUTH_TOKEN}
+      - COLLECT_USER_LIMIT=${COLLECT_USER_LIMIT}
       - DAILY_LIKES_LIMIT=${DAILY_LIKES_LIMIT}
       - USER_TO_LIKE=${USER_TO_LIKE}
