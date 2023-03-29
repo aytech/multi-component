@@ -33,7 +33,7 @@ class TinderProcessor:
 
         if last_run_record is not None:
             hours_since_last_run = DateProcessor.hours_passed(from_date=last_run_record.value)
-            if hours_since_last_run > 12:
+            if hours_since_last_run >= 12:
                 message: str = '%s hours passed since last run, continuing...'
                 self.storage.add_message(message=message % hours_since_last_run, persist=True)
                 return False
@@ -65,8 +65,6 @@ class TinderProcessor:
                     self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
                 else:
                     profiles_missed += 1
-                    message = 'User %s (%s) is already in the system, missed %s so far, limit: %s'
-                    self.storage.add_message(message=message % (user.name, user.user_id, profiles_missed, limit))
 
             if profiles_missed >= limit:
                 self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
@@ -91,10 +89,8 @@ class TinderProcessor:
                 time.sleep(1)  # wait between likes
                 if self.like_user(user=user):
                     profiles_liked += 1
-                    self.storage.add_message('Liked %s profiles so far' % profiles_liked, persist=True)
                 else:
                     profiles_missed += 1
-                    self.storage.add_message('Missed %s profiles so far, limit: %s' % (profiles_missed, limit))
 
             # Looks like Tinder API stops giving new profiles when out of likes, so should be limited
             if profiles_missed >= limit:
