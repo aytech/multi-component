@@ -51,13 +51,17 @@ class TinderProcessor:
 
         while True:
             try:
-                results: list[UserDao] = self.get_batch_profile_data()
+                profiles_batch: list[UserDao] = self.get_batch_profile_data()
             except BaseError as e:
                 self.storage.add_message(message=e.message, persist=True)
                 self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
                 return
 
-            for user in results:
+            batch_size = len(profiles_batch)
+
+            for index in range(0, batch_size):
+                user: UserDao = profiles_batch[index]
+
                 if self.storage.get_user(user_id=user.user_id) is None:
                     self.storage.add_user(user=user)
                     profiles_added += 1
@@ -66,9 +70,12 @@ class TinderProcessor:
                 else:
                     profiles_missed += 1
 
-            if profiles_missed >= limit:
-                self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
-                return
+                if index == batch_size - 1:  # Pass at least one user in a batch
+                    self.pass_user(user=user)
+
+                if profiles_missed >= limit:
+                    self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
+                    return
 
     def process_daily_likes(self, limit: int = 10) -> None:
 
@@ -153,6 +160,13 @@ class TinderProcessor:
         self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
         self.storage.update_user_like_status(user_id=user.user_id, status=True)
         return True
+
+    def pass_user(self, user: UserDao) -> None:
+        response = requests.get('%s/pass/%s' % (self.base_url, user.user_id), headers=self.request_headers,
+                                params={'s_number': user.s_number})
+        message = 'User %s (%s) is passed with status code %s'
+        response_status = response.json()['status']
+        self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
 
     def __init__(self, storage: PostgresStorage, auth_token: str):
         self.storage = storage

@@ -1,4 +1,5 @@
 import os
+import time
 
 from db.PostgresStorage import PostgresStorage
 from utilities.TinderProcessor import TinderProcessor
@@ -12,6 +13,8 @@ if __name__ == '__main__':
     storage_session = PostgresStorage()
     processor = TinderProcessor(storage=storage_session, auth_token=AUTH_TOKEN)
 
-    processor.like_teaser_profiles(other_teaser_name=USER_TO_LIKE)
-    processor.process_daily_likes(limit=DAILY_LIKES_LIMIT)
-    processor.collect_profiles(limit=COLLECT_USER_LIMIT)
+    while True:
+        processor.like_teaser_profiles(other_teaser_name=USER_TO_LIKE)
+        processor.process_daily_likes(limit=DAILY_LIKES_LIMIT)
+        processor.collect_profiles(limit=COLLECT_USER_LIMIT)
+        time.sleep(3600)

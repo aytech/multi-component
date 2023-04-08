@@ -11,3 +11,8 @@ class DateProcessor:
         hours: int = delta.days * 24 if delta.days > 0 else 0
 
         return hours + (delta.seconds // 3600)
+
+    @staticmethod
+    def get_current_date() -> str:
+        dt: datetime = datetime.now()
+        return dt.strftime('%Y-%b-%d %H:%M:%S')
