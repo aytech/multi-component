@@ -104,6 +104,13 @@ class PostgresStorage:
         select_statement = select(Settings).where(Settings.name == setting_name)
         return self.session.scalars(statement=select_statement).one_or_none()
 
+    def get_users_with_photos(self, user_name_partial: str):
+        users: list[str] = []
+        statement: Select = select(User).where(User.name.like('{}%'.format(user_name_partial)))
+        for user in self.session.scalars(statement=statement).all():
+            users.append(str(self.get_user_dao(user=user)))
+        return users
+
     def __init__(self):
         engine = create_engine('postgresql+psycopg://oleg:postgres@storage/tinder')
         self.session = Session(engine)

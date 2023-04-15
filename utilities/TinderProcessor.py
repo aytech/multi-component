@@ -1,7 +1,10 @@
+import json
 import time
 from typing import Optional
 
 import requests
+import certifi
+import urllib3
 
 from db.PostgresStorage import PostgresStorage
 from db.dao import UserDao, UserTeaserDao
@@ -13,20 +16,22 @@ from utilities.errors.BaseError import BaseError
 
 class TinderProcessor:
     base_url: str = 'https://api.gotinder.com'
-    storage: PostgresStorage
+    pool_manager: urllib3.PoolManager
     request_headers: dict
+    storage: PostgresStorage
 
     def get_batch_profile_data(self) -> list[UserDao]:
         self.storage.add_message('Retrieving batch profile data...')
         time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
-        response = requests.get('%s/v2/recs/core' % self.base_url, headers=self.request_headers)
-        return Results.user_list(raw_data=response)
+        url: str = '%s/v2/recs/core' % self.base_url
+        request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
+        return Results.user_list(json_data=json.loads(request.data.decode('utf-8')))
 
     def get_teaser_profile(self) -> Optional[UserTeaserDao]:
         self.storage.add_message('Retrieving teaser user profile')
-        response = requests.get('%s/v2/fast-match/teaser?type=recently-active' % self.base_url,
-                                headers=self.request_headers)
-        return Results.teaser_user(raw_data=response)
+        url: str = '%s/v2/fast-match/teaser?type=recently-active' % self.base_url
+        request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
+        return Results.teaser_user(json_data=json.loads(request.data.decode('utf-8')))
 
     def are_likes_exhausted(self) -> bool:
         last_run_record: Optional[Settings] = self.storage.get_daily_run_setting()
@@ -171,3 +176,4 @@ class TinderProcessor:
     def __init__(self, storage: PostgresStorage, auth_token: str):
         self.storage = storage
         self.request_headers = {'X-Auth-Token': auth_token, 'Host': 'api.gotinder.com'}
+        self.pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())

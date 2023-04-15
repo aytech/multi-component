@@ -1,9 +1,6 @@
 from typing import Optional
 
-from requests import JSONDecodeError
-
 from db.dao import UserDao, PhotoDao, UserTeaserDao
-from utilities.errors.AuthorisationError import AuthorisationError
 from utilities.errors.GenericError import GenericError
 from utilities.errors.TimeoutReceivedError import TimeoutReceivedError
 
@@ -11,25 +8,18 @@ from utilities.errors.TimeoutReceivedError import TimeoutReceivedError
 class Results:
 
     @staticmethod
-    def process_raw_data(raw_data=None) -> dict:
-        try:
-            data = raw_data.json()
-        except JSONDecodeError as e:
-            if raw_data.status_code == 401:
-                raise AuthorisationError()
-            else:
-                raise GenericError(reason=e.response)
-        if data is None:
+    def process_json_data(json_data=None) -> dict:
+        if json_data is None:
             raise GenericError(reason='Response data is null')
-        if 'data' not in data:
-            raise GenericError(reason=data)
-        if 'timeout' in data['data']:
-            raise TimeoutReceivedError(reason=data)
-        return data['data']
+        if 'data' not in json_data:
+            raise GenericError(reason=json_data)
+        if 'timeout' in json_data['data']:
+            raise TimeoutReceivedError(reason=json_data)
+        return json_data['data']
 
     @staticmethod
-    def user_list(raw_data=None) -> list[UserDao]:
-        data = Results.process_raw_data(raw_data=raw_data)
+    def user_list(json_data=None) -> list[UserDao]:
+        data = Results.process_json_data(json_data=json_data)
         users: list[UserDao] = []
         if 'results' not in data:
             return users
@@ -59,8 +49,8 @@ class Results:
         return users
 
     @staticmethod
-    def teaser_user(raw_data=None) -> Optional[UserTeaserDao]:
-        data = Results.process_raw_data(raw_data=raw_data)
+    def teaser_user(json_data=None) -> Optional[UserTeaserDao]:
+        data = Results.process_json_data(json_data=json_data)
         if 'recently_active' not in data:
             return None
         if 'name' not in data['recently_active']:
