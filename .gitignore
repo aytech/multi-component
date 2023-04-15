@@ -1,5 +1,5 @@
-.env
+processor/.env
+processor/data
 .idea
 *.log
 **/__pycache__
-data
