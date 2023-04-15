@@ -15,13 +15,19 @@ services:
       - ./data:/var/lib/postgresql/data
       - ./db_init:/docker-entrypoint-initdb.d
   runner:
+    container_name: processor
     image: ole-ya/tinder
     depends_on:
       - db
-    volumes:
-      - .:/app
     environment:
       - AUTH_TOKEN=${AUTH_TOKEN}
       - COLLECT_USER_LIMIT=${COLLECT_USER_LIMIT}
       - DAILY_LIKES_LIMIT=${DAILY_LIKES_LIMIT}
       - USER_TO_LIKE=${USER_TO_LIKE}
+  pg-admin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=postgres
+    ports:
+      - "8888:80"
