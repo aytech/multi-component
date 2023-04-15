@@ -1,5 +1,6 @@
-processor/.env
-processor/data
+.env
 .idea
+data
 *.log
+*.gz
 **/__pycache__

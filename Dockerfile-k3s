@@ -1,9 +1,0 @@
-FROM ubuntu:jammy
-
-RUN apt update
-RUN apt -y upgrade
-RUN apt install -y curl
-# https://github.com/k3d-io/k3d
-RUN curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
-
-ENTRYPOINT ["tail", "-f", "/dev/null"]

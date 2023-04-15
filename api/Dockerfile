@@ -12,8 +12,9 @@ RUN python -m pip install --upgrade pip
 COPY ./requirements.txt ./requirements.txt
 RUN pip install -r ./requirements.txt
 
-COPY db ./db
-COPY utilities ./utilities
+COPY dao.py ./
 COPY main.py ./
+COPY models.py ./
+COPY PostgresStorage.py ./
 
 CMD [ "python", "-u", "main.py" ]
