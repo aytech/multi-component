@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './styles.css'
-import { Card, Carousel, Image, Layout, Menu, Space } from 'antd'
+import { Card, Carousel, Col, Image, Layout, Menu, Row } from 'antd'
 import { Content, Footer, Header } from 'antd/es/layout/layout'
 import Meta from 'antd/es/card/Meta'
 
@@ -46,53 +46,31 @@ function App() {
           } ) ) } />
       </Header>
       <Content style={ { padding: "20px" } }>
-        <Space direction='horizontal' style={ { marginBottom: "20px" } }>
-          { profiles.slice( 0, 5 ).map( profile =>
-            <Card
-              hoverable
-              style={ { height: 470, width: 240 } }
-              cover={
-                <Carousel autoplay dots={ { className: "photo-dots" } }>
-                  { profile.photos.map( ( photo: any ) => (
-                    <Image
-                      width={ 240 }
-                      src={ photo.url }
-                      placeholder={
-                        <Image
-                          preview={ false }
-                          src={ `${ photo.url }?x-oss-process=image/blur,r_50,s_50/quality,q_1/resize,m_mfit,h_200,w_200` }
-                          width={ 240 } /> } />
-                  ) ) }
-                </Carousel>
-              }>
-              <Meta title={ profile.name } description="Not fetched yet"></Meta>
-            </Card>
-          ) }
-        </Space>
-        <Space direction='horizontal' style={ { marginBottom: "20px" } }>
-          { profiles.slice( 5 ).map( profile =>
-            <Card
-              hoverable
-              style={ { height: 420, width: 240 } }
-              cover={
-                <Carousel dots={ { className: "photo-dots" } }>
-                  { profile.photos.map( ( photo: any ) => (
-                    <Image
-                      width={ 240 }
-                      src={ photo.url }
-                      placeholder={
-                        <Image
-                          preview={ false }
-                          src={ `${ photo.url }?x-oss-process=image/blur,r_50,s_50/quality,q_1/resize,m_mfit,h_200,w_200` }
-                          width={ 240 } /> } />
-                  ) ) }
-                </Carousel>
-                // <img alt="card" src={ profile.photos.length > 0 ? profile.photos[ 0 ].url : 'https://place-hold.it/240' } /> 
-              }>
-              <Meta title={ profile.name } description="Not fetched yet"></Meta>
-            </Card>
-          ) }
-        </Space>
+        <Row gutter={ 16 }>
+          { profiles.map( profile => (
+            <Col className="card-col">
+              <Card
+                hoverable
+                style={ { height: 470, width: 240 } }
+                cover={
+                  <Carousel autoplay dots={ { className: "photo-dots" } }>
+                    { profile.photos.map( ( photo: any ) => (
+                      <Image
+                        width={ 240 }
+                        src={ photo.url }
+                        placeholder={
+                          <Image
+                            preview={ false }
+                            src={ `${ photo.url }?x-oss-process=image/blur,r_50,s_50/quality,q_1/resize,m_mfit,h_200,w_200` }
+                            width={ 240 } /> } />
+                    ) ) }
+                  </Carousel>
+                }>
+                <Meta title={ profile.name } description="Not fetched yet"></Meta>
+              </Card>
+            </Col>
+          ) ) }
+        </Row>
       </Content>
       <Footer>Footer</Footer>
     </Layout>
