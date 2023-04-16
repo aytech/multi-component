@@ -1,0 +1,16 @@
+.card-col {
+  margin-bottom: 12px;
+}
+
+.profile-card {
+  height: 470px;
+  width: 240px
+}
+
+.ant-carousel .slick-dots.photo-dots li button {
+  background-color: black;
+}
+
+.ant-carousel .slick-dots.photo-dots li.slick-active button {
+  background-color: bisque;
+}

@@ -1,0 +1,13 @@
+export interface Profile {
+  city?: string
+  liked: boolean
+  name: string
+  photos: Array<Photo>
+  s_number: number
+  user_id: string
+}
+
+export interface Photo {
+  photo_id: string
+  url: string
+}

@@ -10,11 +10,3 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-.ant-carousel .slick-dots.photo-dots li button {
-  background-color: black;
-}
-
-.ant-carousel .slick-dots.photo-dots li.slick-active button {
-  background-color: bisque;
-}

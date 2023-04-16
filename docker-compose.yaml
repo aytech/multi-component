@@ -14,13 +14,13 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
       - ./db_init:/docker-entrypoint-initdb.d
-  pg-admin:
-    image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=postgres
-    ports:
-      - "8888:80"
+  # pg-admin:
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
+  #     - PGADMIN_DEFAULT_PASSWORD=postgres
+  #   ports:
+  #     - "8888:80"
   api:
     container_name: api
     image: ole-ya/api
@@ -28,6 +28,13 @@ services:
       - db
     ports:
       - "8000:8000"
+    environment:
+      PAGE_SIZE: ${PAGE_SIZE}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: storage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
   ui:
     container_name: ui
     image: ole-ya/ui
