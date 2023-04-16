@@ -2,7 +2,6 @@ import json
 import time
 from typing import Optional
 
-import requests
 import certifi
 import urllib3
 
@@ -14,15 +13,15 @@ from utilities.Results import Results
 from utilities.errors.BaseError import BaseError
 
 
-class TinderProcessor:
-    base_url: str = 'https://api.gotinder.com'
+class MainProcessor:
+    base_url: str
     pool_manager: urllib3.PoolManager
     request_headers: dict
     storage: PostgresStorage
 
     def get_batch_profile_data(self) -> list[UserDao]:
         self.storage.add_message('Retrieving batch profile data...')
-        time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
+        # time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
         url: str = '%s/v2/recs/core' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
         return Results.user_list(json_data=json.loads(request.data.decode('utf-8')))
@@ -32,6 +31,35 @@ class TinderProcessor:
         url: str = '%s/v2/fast-match/teaser?type=recently-active' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
         return Results.teaser_user(json_data=json.loads(request.data.decode('utf-8')))
+
+    def pass_user(self, user: UserDao) -> None:
+        request = self.pool_manager.request(method='GET', url='%s/pass/%s' % (self.base_url, user.user_id),
+                                            headers=self.request_headers, fields={'s_number': user.s_number})
+        message = 'User %s (%s) is passed with status code %s'
+        self.storage.add_message(message=message % (user.name, user.user_id, request.status), persist=True)
+
+    def like_user(self, user: UserDao) -> bool:
+        user_local: Optional[UserDao] = self.storage.get_user_by_user_id(user_id=user.user_id)
+
+        if user_local is not None and user_local.liked is True:
+            self.storage.add_message(message='User %s (%s) is already liked!!!' % (user.name, user.user_id))
+            self.storage.renew_user(user_dao=user_local)
+            return False
+
+        if user_local is None:
+            self.storage.add_user(user=user)
+
+        url: str = '%s/like/%s' % (self.base_url, user.user_id)
+        request = self.pool_manager.request(method='POST', url=url, headers=self.request_headers, body=json.dumps({
+            's_number': user.s_number,
+            'liked_content_id': user.photos[0].photo_id,
+            'liked_content_type': 'photo'
+        }))
+        message = 'User %s (%s) is liked with status %s'
+        response_status = request.status
+        self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
+        self.storage.update_user_like_status(user_id=user.user_id, status=True)
+        return True
 
     def are_likes_exhausted(self) -> bool:
         last_run_record: Optional[Settings] = self.storage.get_daily_run_setting()
@@ -73,6 +101,7 @@ class TinderProcessor:
                     message: str = 'User %s (%s) added to the system'
                     self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
                 else:
+                    self.storage.renew_user(user_dao=user)
                     profiles_missed += 1
 
                 if index == batch_size - 1:  # Pass at least one user in a batch
@@ -104,7 +133,7 @@ class TinderProcessor:
                 else:
                     profiles_missed += 1
 
-            # Looks like Tinder API stops giving new profiles when out of likes, so should be limited
+            # Looks like new profiles are not issued when out of likes, so should be limited
             if profiles_missed >= limit:
                 self.storage.add_message(message='Terminating daily likes, as likely run out of likes')
                 self.storage.record_daily_like_run()
@@ -121,7 +150,7 @@ class TinderProcessor:
             self.storage.add_message(message=e.message)
             return
 
-        # Process teaser profile from Tinder first
+        # Process remote teaser profile first
         if teaser_profile is not None:
             local_profiles: list[UserDao] = self.storage.get_users_by_name(name=teaser_profile.name)
             if len(local_profiles) == 0:
@@ -145,35 +174,8 @@ class TinderProcessor:
                 for profile in other_profiles:
                     self.like_user(user=profile)
 
-    def like_user(self, user: UserDao) -> bool:
-        user_local: Optional[UserDao] = self.storage.get_user_by_user_id(user_id=user.user_id)
-
-        if user_local is not None and user_local.liked is True:
-            self.storage.add_message(message='User %s (%s) is already liked!!!' % (user.name, user.user_id))
-            return False
-
-        if user_local is None:
-            self.storage.add_user(user=user)
-
-        response = requests.post('%s/like/%s' % (self.base_url, user.user_id), headers=self.request_headers, json={
-            's_number': user.s_number,
-            'liked_content_id': user.photos[0].photo_id,
-            'liked_content_type': 'photo'
-        })
-        message = 'User %s (%s) is liked with status %s'
-        response_status = response.json()['status']
-        self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
-        self.storage.update_user_like_status(user_id=user.user_id, status=True)
-        return True
-
-    def pass_user(self, user: UserDao) -> None:
-        response = requests.get('%s/pass/%s' % (self.base_url, user.user_id), headers=self.request_headers,
-                                params={'s_number': user.s_number})
-        message = 'User %s (%s) is passed with status code %s'
-        response_status = response.json()['status']
-        self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
-
-    def __init__(self, storage: PostgresStorage, auth_token: str):
+    def __init__(self, base_url: str, storage: PostgresStorage, auth_token: str):
+        self.base_url = 'https://%s' % base_url
         self.storage = storage
-        self.request_headers = {'X-Auth-Token': auth_token, 'Host': 'api.gotinder.com'}
+        self.request_headers = {'X-Auth-Token': auth_token, 'Host': base_url}
         self.pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())

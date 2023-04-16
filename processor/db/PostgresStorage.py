@@ -1,4 +1,5 @@
 import datetime
+import os
 from typing import Optional
 
 from sqlalchemy import create_engine, select, update, Select
@@ -104,13 +105,19 @@ class PostgresStorage:
         select_statement = select(Settings).where(Settings.name == setting_name)
         return self.session.scalars(statement=select_statement).one_or_none()
 
-    def get_users_with_photos(self, user_name_partial: str):
-        users: list[str] = []
-        statement: Select = select(User).where(User.name.like('{}%'.format(user_name_partial)))
-        for user in self.session.scalars(statement=statement).all():
-            users.append(str(self.get_user_dao(user=user)))
-        return users
+    def renew_user(self, user_dao: UserDao):
+        user: User = self.session.scalars(statement=select(User).where(User.user_id == user_dao.user_id)).one()
+        with self.session as session:
+            session.delete(user)
+            session.commit()
+        self.add_user(user=user_dao)
 
     def __init__(self):
-        engine = create_engine('postgresql+psycopg://oleg:postgres@storage/tinder')
+        engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (
+            os.environ.get('POSTGRES_USER'),
+            os.environ.get('POSTGRES_PASSWORD'),
+            os.environ.get('POSTGRES_HOST'),
+            os.environ.get('POSTGRES_PORT'),
+            os.environ.get('POSTGRES_DB'),
+        ))
         self.session = Session(engine)
