@@ -1,6 +1,7 @@
 .env
-.idea
 data
 *.log
 *.gz
+**/.idea
+**/node_modules
 **/__pycache__

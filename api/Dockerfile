@@ -17,4 +17,4 @@ COPY main.py ./
 COPY models.py ./
 COPY PostgresStorage.py ./
 
-CMD [ "python", "-u", "main.py" ]
+CMD [ "gunicorn", "--workers", "4", "--bind", "0.0.0.0:5000", "main:app" ]

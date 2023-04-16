@@ -1,11 +1,12 @@
 from flask import Flask, jsonify, make_response, request
+from flask_cors import CORS
 from flask_restful import Api
 
 from PostgresStorage import PostgresStorage
 
 storage_session = PostgresStorage()
 app = Flask(__name__)
-app.config['SERVER_NAME'] = '0.0.0.0:5000'
+CORS(app)
 api = Api(app)
 
 
