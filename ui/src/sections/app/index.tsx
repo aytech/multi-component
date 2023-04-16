@@ -13,7 +13,7 @@ function App() {
     if ( dataFetchedRef.current !== true ) {
       dataFetchedRef.current = true
       console.log( "UseEffect called!" )
-      fetch( 'http://localhost:5000/users?page=1' )
+      fetch( '/api/users?page=1' )
         .then( response => response.json() )
         .then( ( data: Array<any> ) => {
           setProfiles( data )

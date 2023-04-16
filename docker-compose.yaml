@@ -27,7 +27,14 @@ services:
     depends_on:
       - db
     ports:
-      - "8080:5000"
+      - "8000:8000"
+  ui:
+    container_name: ui
+    image: ole-ya/ui
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
   processor:
     container_name: processor
     image: ole-ya/processor

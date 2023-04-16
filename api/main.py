@@ -10,7 +10,7 @@ CORS(app)
 api = Api(app)
 
 
-@app.route('/users', methods=['GET'])
+@app.route('/api/users', methods=['GET'])
 def get_users():
     page: int = 1
     try:
