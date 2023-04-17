@@ -1,34 +1,36 @@
 import './styles.css'
-import { Layout } from 'antd'
+import { Layout, Pagination } from 'antd'
 import { Content, Footer } from 'antd/es/layout/layout'
 import { Search } from '../search'
 import { Gallery } from '../gallery'
 import { AppHeader } from '../header'
 import { useState } from 'react'
-import { Profile } from '../../lib/types'
+import { UsersData } from '../../lib/types'
+import { Paginator } from '../paginator'
 
 function App() {
 
-  const [ profiles, setProfiles ] = useState<Array<Profile>>( [] )
+  const [ userData, setUserData ] = useState<UsersData | null>( null )
 
-  const fetchProfiles = async () => {
+  const fetchUserData = async () => {
     const response = await fetch( "/api/users?page=1" );
-    const profiles: Array<Profile> = await response.json();
-    setProfiles( profiles )
+    const userData: UsersData = await response.json();
+    setUserData( userData )
   }
 
-  const searchProfilesByName = async ( name: string ) => {
+  const searchUsersByName = async ( name: string ) => {
     const response = await fetch( `/api/users/search/${ name }?page=1` );
-    const profiles: Array<Profile> = await response.json();
-    setProfiles( profiles )
+    const userData: UsersData = await response.json();
+    setUserData( userData )
   }
 
   return (
     <Layout>
       <AppHeader />
       <Content className="app-content">
-        <Search fetchProfiles={ fetchProfiles } searchProfiles={ searchProfilesByName } />
-        <Gallery fetchProfiles={ fetchProfiles } profiles={ profiles } />
+        <Search fetchUserData={ fetchUserData } searchUsers={ searchUsersByName } />
+        <Gallery fetchUserData={ fetchUserData } userData={ userData } />
+        <Paginator userData={ userData } />
       </Content>
       <Footer>Footer</Footer>
     </Layout>

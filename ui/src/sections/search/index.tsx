@@ -2,22 +2,22 @@ import { Col, Row, Input } from "antd"
 import "./styles.css"
 
 interface Props {
-  fetchProfiles: () => void
-  searchProfiles: ( name: string ) => void
+  fetchUserData: () => void
+  searchUsers: ( name: string ) => void
 }
 
 export const Search = ( {
-  fetchProfiles,
-  searchProfiles
+  fetchUserData,
+  searchUsers
 }: Props ) => {
 
   const { Search } = Input
 
   const onSearch = async ( value: string ) => {
     if ( value.length > 0 ) {
-      searchProfiles( value )
+      searchUsers( value )
     } else {
-      fetchProfiles()
+      fetchUserData()
     }
   };
 

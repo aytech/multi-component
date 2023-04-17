@@ -11,3 +11,8 @@ export interface Photo {
   photo_id: string
   url: string
 }
+
+export interface UsersData {
+  total: number,
+  users: Array<Profile>
+}

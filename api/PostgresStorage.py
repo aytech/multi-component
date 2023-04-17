@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import create_engine, Select, select
+from sqlalchemy import create_engine, Select, select, func
 from sqlalchemy.orm import Session
 
 from dao import UserDao, PhotoDao
@@ -39,6 +39,12 @@ class PostgresStorage:
         for user in self.session.scalars(statement=statement).all():
             users.append(self.get_user_dict(user=user))
         return users
+
+    def fetch_all_users_count(self):
+        return self.session.query(func.count(User.id)).scalar()
+
+    def fetch_filtered_users_count(self, name_partial: str):
+        return self.session.query(func.count(User.id)).where(User.name.like('%{}%'.format(name_partial))).scalar()
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (

@@ -1,16 +1,16 @@
 import { Card, Carousel, Col, Image, Row } from "antd"
 import "./styles.css"
 import { useEffect, useRef } from "react"
-import { Profile } from "../../lib/types"
+import { UsersData } from "../../lib/types"
 
 interface Props {
-  fetchProfiles: () => void
-  profiles: Array<Profile>
+  fetchUserData: () => void
+  userData: UsersData | null
 }
 
 export const Gallery = ( {
-  fetchProfiles,
-  profiles
+  fetchUserData,
+  userData
 }: Props ) => {
 
   const { Meta } = Card
@@ -19,13 +19,13 @@ export const Gallery = ( {
   useEffect( () => {
     if ( dataFetchedRef.current !== true ) {
       dataFetchedRef.current = true
-      fetchProfiles()
+      fetchUserData()
     }
-  }, [ fetchProfiles ] )
+  }, [ fetchUserData ] )
 
-  return (
-    <Row gutter={ 16 }>
-      { profiles.map( profile => (
+  const GalleryCollection = () => userData !== null ? (
+    <>
+      { userData.users.map( profile => (
         <Col
           className="card-col"
           key={ profile.s_number }>
@@ -46,6 +46,12 @@ export const Gallery = ( {
           </Card>
         </Col>
       ) ) }
+    </>
+  ) : null
+
+  return (
+    <Row gutter={ 16 }>
+      <GalleryCollection />
     </Row>
   )
 }
