@@ -3,6 +3,7 @@ import time
 from typing import Optional
 
 import certifi
+import requests
 import urllib3
 
 from db.PostgresStorage import PostgresStorage
@@ -10,6 +11,7 @@ from db.dao import UserDao, UserTeaserDao
 from db.models import Settings
 from utilities.DateProcessor import DateProcessor
 from utilities.Results import Results
+from utilities.errors.AuthorizationError import AuthorizationError
 from utilities.errors.BaseError import BaseError
 
 
@@ -21,9 +23,11 @@ class MainProcessor:
 
     def get_batch_profile_data(self) -> list[UserDao]:
         self.storage.add_message('Retrieving batch profile data...')
-        # time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
+        time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
         url: str = '%s/v2/recs/core' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
+        if request.status == requests.status_codes.codes.unauthorized:
+            raise AuthorizationError()
         return Results.user_list(json_data=json.loads(request.data.decode('utf-8')))
 
     def get_teaser_profile(self) -> Optional[UserTeaserDao]:
@@ -102,6 +106,8 @@ class MainProcessor:
                     self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
                 else:
                     self.storage.renew_user(user_dao=user)
+                    message: str = 'User %s (%s) was renewed'
+                    self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
                     profiles_missed += 1
 
                 if index == batch_size - 1:  # Pass at least one user in a batch
