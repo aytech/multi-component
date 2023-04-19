@@ -16,3 +16,8 @@ export interface UsersData {
   total: number,
   users: Array<Profile>
 }
+
+export interface Page {
+  page: number
+  size: number
+}

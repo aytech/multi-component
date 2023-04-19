@@ -4,13 +4,25 @@
 
 .profile-card {
   height: 470px;
+  overflow: hidden;
   width: 240px
 }
 
 .ant-carousel .slick-dots.photo-dots li button {
-  background-color: black;
+  background-color: red;
+  height: 15px;
 }
 
 .ant-carousel .slick-dots.photo-dots li.slick-active button {
   background-color: bisque;
+}
+
+.ant-card-bordered .ant-card-cover {
+  max-height: 70%;
+  overflow: hidden;
+}
+
+.ant-carousel .slick-dots-bottom {
+  bottom: 0;
+  top: 20px;
 }

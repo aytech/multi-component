@@ -1,9 +1,4 @@
 .app-content {
-  overflow: scroll;
+  overflow-y: scroll;
   padding: 20px;
-}
-
-.pagination {
-  margin: 20px auto;
-  text-align: center;
 }
