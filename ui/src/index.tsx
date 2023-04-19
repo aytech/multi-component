@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router } from "react-router-dom"
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom"
 import './index.css';
 import App from './sections/app';
 import reportWebVitals from './reportWebVitals';
@@ -9,7 +9,9 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <Router>
-    <App />
+    <Routes>
+      <Route path="/" element={ <App /> } />
+    </Routes>
   </Router>
 );
 

@@ -1,4 +1,5 @@
-import { Card, Carousel, Col, Image, Row } from "antd"
+import { Button, Card, Carousel, Col, Image, Row, Space } from "antd"
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
 import "./styles.css"
 import { UsersData } from "../../lib/types"
 
@@ -12,6 +13,14 @@ export const Gallery = ( {
 
   const { Meta } = Card
 
+  const LikedIcon = ( { liked }: { liked: boolean } ) => {
+    return liked ? (
+      <CheckCircleOutlined style={ { fontSize: "24px", color: "green" } } />
+    ) : (
+      <CloseCircleOutlined style={ { fontSize: "24px", color: "red" } } />
+    )
+  }
+
   const GalleryCollection = () => userData !== null ? (
     <>
       { userData.users.map( profile => (
@@ -22,9 +31,10 @@ export const Gallery = ( {
             className="profile-card"
             hoverable
             cover={
-              <Carousel dots={ { className: "photo-dots" } }>
+              <Carousel autoplay dots={ { className: "photo-dots" } }>
                 { profile.photos.map( ( photo: any ) => (
                   <Image
+                    className="carousel-image"
                     key={ photo.photo_id }
                     width={ 240 }
                     src={ photo.url }
@@ -32,7 +42,22 @@ export const Gallery = ( {
                 ) ) }
               </Carousel>
             }>
-            <Meta title={ profile.name } description="Not fetched yet"></Meta>
+            <Meta title={ profile.name } description={ (
+              <>
+                <div className="text-center">
+                  <LikedIcon liked={ profile.liked } />
+                </div>
+                <br />
+                <div className="text-center">
+                  <Button
+                    className="text-center"
+                    type="primary"
+                    onClick={ () => console.log( "Liking!!" ) }>
+                    Like
+                  </Button>
+                </div>
+              </>
+            ) }></Meta>
           </Card>
         </Col>
       ) ) }

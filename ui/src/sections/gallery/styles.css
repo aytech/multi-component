@@ -19,10 +19,13 @@
 
 .ant-card-bordered .ant-card-cover {
   max-height: 70%;
-  overflow: hidden;
 }
 
 .ant-carousel .slick-dots-bottom {
   bottom: 0;
-  top: 20px;
+  top: 90%;
+}
+
+.carousel-image {
+  max-height: 320px;
 }
