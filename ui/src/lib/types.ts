@@ -19,5 +19,6 @@ export interface UsersData {
 
 export interface Page {
   page: number
+  search?: string
   size: number
 }

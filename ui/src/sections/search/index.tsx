@@ -1,30 +1,42 @@
 import { Col, Row, Input } from "antd"
 import "./styles.css"
+import { useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 interface Props {
-  fetchUserData: () => void
-  searchUsers: ( name: string ) => void
+  searchParams: URLSearchParams
 }
 
 export const Search = ( {
-  fetchUserData,
-  searchUsers
+  searchParams
 }: Props ) => {
+
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const { Search } = Input
 
+  const [ searchValue, setSearchValue ] = useState<string>( searchParams.get( "search" ) || "" )
+
   const onSearch = async ( value: string ) => {
-    if ( value.length > 0 ) {
-      searchUsers( value )
+    if ( value === "" ) {
+      searchParams.delete( "search" )
     } else {
-      fetchUserData()
+      searchParams.set( "search", searchValue )
     }
+    return navigate( `${ location.pathname }?${ searchParams.toString() }` )
   };
 
   return (
     <Row className="search-bar">
       <Col xs={ 24 } sm={ 22 } md={ 20 } lg={ 20 } xl={ 20 }>
-        <Search allowClear placeholder="input search text" onSearch={ onSearch } enterButton />
+        <Search
+          allowClear
+          enterButton
+          onChange={ ( event: any ) => setSearchValue( event.target.value ) }
+          onSearch={ onSearch }
+          placeholder="input search text"
+          value={ searchValue } />
       </Col>
     </Row>
   )

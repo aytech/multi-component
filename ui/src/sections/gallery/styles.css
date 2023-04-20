@@ -23,7 +23,8 @@
 
 .ant-carousel .slick-dots-bottom {
   bottom: 0;
-  top: 90%;
+  height: 15px;
+  top: 1%;
 }
 
 .carousel-image {

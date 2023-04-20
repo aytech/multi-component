@@ -18,9 +18,10 @@ function App() {
   const [ loading, setLoading ] = useState<boolean>( true )
 
   const getSearchParameters = (): Page => {
-    const parameters = { page: currentPage.page, size: currentPage.size }
+    const parameters: Page = { page: currentPage.page, size: currentPage.size }
     let page: number | string | null = searchParams.get( "page" )
     let size: number | string | null = searchParams.get( "size" )
+    let search: string | null = searchParams.get( "search" )
     if ( page !== null ) {
       page = parseInt( page )
       parameters.page = Number.isNaN( page ) ? 1 : page
@@ -29,6 +30,9 @@ function App() {
       size = parseInt( size )
       parameters.size = Number.isNaN( size ) ? 10 : size
     }
+    if ( search !== null && search.trim() !== "" ) {
+      parameters.search = search
+    }
     return parameters
   }
 
@@ -36,27 +40,24 @@ function App() {
     setLoading( true )
     const parameters: Page = getSearchParameters()
     setCurrentPage( parameters )
-    const response = await fetch( `/api/users?page=${ parameters.page }&size=${ parameters.size }` );
+    const requestUrl = parameters.search !== undefined
+      ? `/api/users/search/${ parameters.search }?page=${ currentPage.page }&size=${ currentPage.size }`
+      : `/api/users?page=${ parameters.page }&size=${ parameters.size }`
+    const response = await fetch( requestUrl );
     const userData: UsersData = await response.json();
     setUserData( userData )
     setLoading( false )
   }
 
-  const searchUsersByName = async ( name: string ) => {
-    const response = await fetch( `/api/users/search/${ name }?page=${ currentPage.page }&size=${ currentPage.size }` );
-    const userData: UsersData = await response.json();
-    setUserData( userData )
-  }
-
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
     <>
-      <Search fetchUserData={ fetchUserData } searchUsers={ searchUsersByName } />
+      <Search searchParams={ searchParams } />
       <Gallery userData={ userData } />
       <Paginator currentPage={ currentPage } loadPage={ fetchUserData } userData={ userData } />
     </>
   ) : (
     <>
-      <Search fetchUserData={ fetchUserData } searchUsers={ searchUsersByName } />
+      <Search searchParams={ searchParams } />
       <Empty description="No profiles found">
         <Button
           type="primary"

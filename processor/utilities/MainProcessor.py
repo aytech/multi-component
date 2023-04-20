@@ -27,13 +27,15 @@ class MainProcessor:
         url: str = '%s/v2/recs/core' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
         if request.status == requests.status_codes.codes.unauthorized:
-            raise AuthorizationError()
+            raise AuthorizationError(message='while fetching profiles data')
         return Results.user_list(json_data=json.loads(request.data.decode('utf-8')))
 
     def get_teaser_profile(self) -> Optional[UserTeaserDao]:
         self.storage.add_message('Retrieving teaser user profile')
         url: str = '%s/v2/fast-match/teaser?type=recently-active' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
+        if request.status == requests.status_codes.codes.unauthorized:
+            raise AuthorizationError(message='while fetching teaser profile')
         return Results.teaser_user(json_data=json.loads(request.data.decode('utf-8')))
 
     def pass_user(self, user: UserDao) -> None:
@@ -46,7 +48,7 @@ class MainProcessor:
         user_local: Optional[UserDao] = self.storage.get_user_by_user_id(user_id=user.user_id)
 
         if user_local is not None and user_local.liked is True:
-            self.storage.add_message(message='User %s (%s) is already liked!!!' % (user.name, user.user_id))
+            self.storage.add_message(message='User %s (%s) is already liked, renewing...' % (user.name, user.user_id))
             self.storage.renew_user(user_dao=user_local)
             return False
 
@@ -91,7 +93,8 @@ class MainProcessor:
                 profiles_batch: list[UserDao] = self.get_batch_profile_data()
             except BaseError as e:
                 self.storage.add_message(message=e.message, persist=True)
-                self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
+                if profiles_missed >= limit:
+                    self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
                 return
 
             batch_size = len(profiles_batch)
