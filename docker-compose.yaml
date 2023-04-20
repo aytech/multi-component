@@ -29,6 +29,8 @@ services:
     ports:
       - "8000:8000"
     environment:
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      BASE_URL: ${BASE_URL}
       PAGE_SIZE: ${PAGE_SIZE}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: storage

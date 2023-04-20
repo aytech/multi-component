@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import create_engine, Select, select, func
+from sqlalchemy import create_engine, Select, select, func, update
 from sqlalchemy.orm import Session
 
 from dao import UserDao, PhotoDao
@@ -14,6 +14,7 @@ class PostgresStorage:
     def get_user_dict(user: User) -> dict:
         user_dao: UserDao = UserDao(
             city=user.city,
+            db_id=user.id,
             liked=user.liked,
             name=user.name,
             s_number=user.s_number,
@@ -45,6 +46,19 @@ class PostgresStorage:
 
     def fetch_filtered_users_count(self, name_partial: str):
         return self.session.query(func.count(User.id)).where(User.name.like('%{}%'.format(name_partial))).scalar()
+
+    def fetch_user_by_id(self, user_id: int) -> User:
+        return self.session.scalars(statement=select(User).where(User.id == user_id)).one()
+
+    def delete_user_by_id(self, user_id: int) -> None:
+        with self.session as session:
+            session.delete(self.fetch_user_by_id(user_id=user_id))
+            session.commit()
+
+    def update_user(self, user: User):
+        with self.session as session:
+            session.execute(statement=update(User).where(User.id == user.id).values(liked=user.liked))
+            session.commit()
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (

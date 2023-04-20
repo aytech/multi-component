@@ -17,14 +17,16 @@ class PhotoDao:
 class UserDao:
     city: Optional[str]
     created: str
+    id: int
     liked: bool
     name: str
     photos: list[PhotoDao]
     s_number: int
     user_id: str
 
-    def __init__(self, liked: bool, name: str, s_number: int, user_id: str, city: Optional[str] = None):
+    def __init__(self, db_id: int, liked: bool, name: str, s_number: int, user_id: str, city: Optional[str] = None):
         self.city = city
+        self.id = db_id
         self.liked = liked
         self.name = name
         self.s_number = s_number
@@ -32,6 +34,6 @@ class UserDao:
 
     def __str__(self):
         return f'''
-            User(city={self.city!r}, liked={self.liked!r},, name={self.name!r},
+            User(city={self.city!r}, id={self.id}, liked={self.liked!r},, name={self.name!r},
             photos={[str(photo) for photo in self.photos]} s_number={self.s_number!r}, 'user_id={self.user_id})
         '''
