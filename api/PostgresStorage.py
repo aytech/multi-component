@@ -26,17 +26,24 @@ class PostgresStorage:
         ).__dict__ for photo in user.photos]
         return user_dao.__dict__
 
-    def list_users(self, page: int, page_size: int = 10) -> list[dict]:
+    def list_users(self, page: int, page_size: int = 10, liked: bool or None = None) -> list[dict]:
         users: list[dict] = []
-        statement: Select = select(User).order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
+        statement: Select = select(User)
+        if liked is not None:
+            statement = statement.where(User.liked == liked)
+        # paginate
+        statement = statement.order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
         for user in self.session.scalars(statement=statement).all():
             users.append(self.get_user_dict(user=user))
         return users
 
-    def search_users(self, name_partial: str, page: int = 1, page_size: int = 10) -> list[dict]:
+    def search_users(self, name_partial: str, page: int = 1, page_size: int = 10, liked: bool or None = None):
         users: list[dict] = []
-        statement: Select = select(User).where(User.name.like('%{}%'.format(name_partial))) \
-            .order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
+        statement: Select = select(User).where(User.name.like('%{}%'.format(name_partial)))
+        if liked is not None:
+            statement = statement.where(User.liked == liked)
+        # paginate
+        statement.order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
         for user in self.session.scalars(statement=statement).all():
             users.append(self.get_user_dict(user=user))
         return users

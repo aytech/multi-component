@@ -19,6 +19,7 @@ export interface UsersData {
 }
 
 export interface Page {
+  liked?: string
   page: number
   search?: string
   size: number

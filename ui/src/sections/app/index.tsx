@@ -8,8 +8,9 @@ import { useEffect, useState } from 'react'
 import { Page, UsersData } from '../../lib/types'
 import { Paginator } from '../paginator'
 import { useSearchParams } from 'react-router-dom'
+import { UrlUtility } from '../../lib/utilities'
 
-function App() {
+export const App = () => {
 
   const [ searchParams ] = useSearchParams()
 
@@ -17,32 +18,13 @@ function App() {
   const [ userData, setUserData ] = useState<UsersData | null>( null )
   const [ loading, setLoading ] = useState<boolean>( true )
 
-  const getSearchParameters = (): Page => {
-    const parameters: Page = { page: currentPage.page, size: currentPage.size }
-    let page: number | string | null = searchParams.get( "page" )
-    let size: number | string | null = searchParams.get( "size" )
-    let search: string | null = searchParams.get( "search" )
-    if ( page !== null ) {
-      page = parseInt( page )
-      parameters.page = Number.isNaN( page ) ? 1 : page
-    }
-    if ( size !== null ) {
-      size = parseInt( size )
-      parameters.size = Number.isNaN( size ) ? 10 : size
-    }
-    if ( search !== null && search.trim() !== "" ) {
-      parameters.search = search
-    }
-    return parameters
-  }
-
   const fetchUserData = async () => {
     setLoading( true )
-    const parameters: Page = getSearchParameters()
+    const parameters: Page = UrlUtility.getSearchParameters( searchParams, currentPage.page, currentPage.size )
     setCurrentPage( parameters )
     const requestUrl = parameters.search !== undefined
-      ? `/api/users/search/${ parameters.search }?page=${ currentPage.page }&size=${ currentPage.size }`
-      : `/api/users?page=${ parameters.page }&size=${ parameters.size }`
+      ? UrlUtility.getUserSearchUrl( parameters )
+      : UrlUtility.getUsersUrl( parameters )
     const response = await fetch( requestUrl );
     const userData: UsersData = await response.json();
     setUserData( userData )
@@ -52,8 +34,8 @@ function App() {
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
     <>
       <Search searchParams={ searchParams } />
-      <Gallery refetch={ fetchUserData } userData={ userData } />
-      <Paginator currentPage={ currentPage } loadPage={ fetchUserData } userData={ userData } />
+      <Gallery refetch={ fetchUserData } searchParams={ searchParams } userData={ userData } />
+      <Paginator currentPage={ currentPage } searchParams={ searchParams } userData={ userData } />
     </>
   ) : (
     <>

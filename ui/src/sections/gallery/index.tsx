@@ -3,18 +3,24 @@ import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
 import "./styles.css"
 import { UsersData } from "../../lib/types"
 import { useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 interface Props {
   refetch: () => void
+  searchParams: URLSearchParams
   userData: UsersData | null
 }
 
 export const Gallery = ( {
   refetch,
+  searchParams,
   userData
 }: Props ) => {
 
   const { Meta } = Card
+
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const [ deleteLoading, setDeleteLoading ] = useState<boolean>( false )
   const [ likeLoading, setLikeLoading ] = useState<boolean>( false )
@@ -75,7 +81,14 @@ export const Gallery = ( {
             <Meta title={ profile.name } description={ (
               <>
                 <div className="text-center">
-                  <LikedIcon liked={ profile.liked } />
+                  <Button
+                    icon={ <LikedIcon liked={ profile.liked } /> }
+                    onClick={ () => {
+                      searchParams.set( "liked", profile.liked ? "1" : "0" )
+                      navigate( `${ location.pathname }?${ searchParams.toString() }` )
+                    } }
+                    title={ profile.liked === true ? "Liked" : "Not liked" }
+                    type="text" />
                 </div>
                 <br />
                 <div className="text-center">

@@ -21,17 +21,25 @@ AUTH_TOKEN: str = os.environ.get('AUTH_TOKEN')
 BASE_URL: str = os.environ.get('BASE_URL')
 
 
+def get_liked_value(value: str or None) -> bool or None:
+    if value is not None:
+        return True if value == '1' else False
+    return None
+
+
 @app.route('/api/users', methods=['GET'])
 def get_users():
     page: int = 1
     page_size: int = PAGE_SIZE
+    liked: bool or None = None
     try:
         page = int(request.args.get('page', default=1))
         page_size = int(request.args.get('size', default=PAGE_SIZE))
+        liked = get_liked_value(request.args.get('liked'))
     except ValueError:
         pass
     return make_response(jsonify({
-        'users': storage_session.list_users(page=page, page_size=page_size),
+        'users': storage_session.list_users(page=page, page_size=page_size, liked=liked),
         'total': storage_session.fetch_all_users_count()
     }))
 
@@ -40,13 +48,15 @@ def get_users():
 def search_users(name: str):
     page: int = 1
     page_size: int = PAGE_SIZE
+    liked: bool or None = None
     try:
         page = int(request.args.get('page', default=1))
         page_size = int(request.args.get('size', default=PAGE_SIZE))
+        liked = get_liked_value(request.args.get('liked'))
     except ValueError:
         pass
     return make_response(jsonify({
-        'users': storage_session.search_users(name_partial=name, page=page, page_size=page_size),
+        'users': storage_session.search_users(name_partial=name, page=page, page_size=page_size, liked=liked),
         'total': storage_session.fetch_filtered_users_count(name_partial=name)
     }))
 

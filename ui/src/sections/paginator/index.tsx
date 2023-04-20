@@ -1,29 +1,33 @@
 import { Pagination } from "antd"
 import { Page, UsersData } from "../../lib/types"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import "./styles.css"
 
 interface Props {
   currentPage: Page
-  loadPage: ( page: number, pageSize: number ) => void
+  searchParams: URLSearchParams
   userData: UsersData | null
 }
 
 export const Paginator = ( {
   currentPage,
+  searchParams,
   userData
 }: Props ) => {
 
+  const location = useLocation()
   const navigate = useNavigate()
 
   const onPageChange = ( page: number ) => {
     if ( page !== currentPage.page ) {
-      return navigate( `/?page=${ page }&size=${ currentPage.size }` )
+      searchParams.set( "page", page.toString() )
+      return navigate( `${ location.pathname }?${ searchParams.toString() }` )
     }
   }
 
   const onPageSizeChange = ( _: number, size: number ) => {
-    return navigate( `/?page=${ currentPage.page }&size=${ size }` )
+    searchParams.set( "size", size.toString() )
+    return navigate( `${ location.pathname }?${ searchParams.toString() }` )
   }
 
   return userData !== null ? (

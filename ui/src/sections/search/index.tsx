@@ -24,6 +24,7 @@ export const Search = ( {
     } else {
       searchParams.set( "search", searchValue )
     }
+    searchParams.set( "page", "1" )
     return navigate( `${ location.pathname }?${ searchParams.toString() }` )
   };
 
