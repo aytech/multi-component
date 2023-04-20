@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db.dao import UserDao, PhotoDao, UserTeaserDao
+from db.dao import UserDao, PhotoDao, UserTeaserDao, RemainingLikesDao
 from utilities.errors.GenericError import GenericError
 from utilities.errors.TimeoutReceivedError import TimeoutReceivedError
 
@@ -56,3 +56,11 @@ class Results:
         if 'name' not in data['recently_active']:
             return None
         return UserTeaserDao(name=data['recently_active']['name'])
+
+    @staticmethod
+    def remaining_likes(json_data=None) -> Optional[RemainingLikesDao]:
+        data = Results.process_json_data(json_data=json_data)
+        if 'likes' not in data:
+            return None
+        return RemainingLikesDao(likes_remaining=data['likes']['likes_remaining'],
+                                 rate_limited_until=data['likes']['rate_limited_until'])

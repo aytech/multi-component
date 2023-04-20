@@ -1,5 +1,9 @@
 import json
+import math
+import os
+import shutil
 import time
+from random import random
 from typing import Optional
 
 import certifi
@@ -7,7 +11,7 @@ import requests
 import urllib3
 
 from db.PostgresStorage import PostgresStorage
-from db.dao import UserDao, UserTeaserDao
+from db.dao import UserDao, UserTeaserDao, RemainingLikesDao
 from db.models import Settings
 from utilities.DateProcessor import DateProcessor
 from utilities.Results import Results
@@ -67,20 +71,81 @@ class MainProcessor:
         self.storage.update_user_like_status(user_id=user.user_id, status=True)
         return True
 
-    def are_likes_exhausted(self) -> bool:
-        last_run_record: Optional[Settings] = self.storage.get_daily_run_setting()
+    def remaining_likes(self) -> RemainingLikesDao:
+        url: str = '%s/v2/profile?include=likes' % self.base_url
+        request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
+        if request.status == requests.status_codes.codes.unauthorized:
+            raise AuthorizationError(message='while fetching teaser profile')
+        return Results.remaining_likes(json_data=json.loads(request.data.decode('utf-8')))
 
-        if last_run_record is not None:
-            hours_since_last_run = DateProcessor.hours_passed(from_date=last_run_record.value)
-            if hours_since_last_run >= 12:
-                message: str = '%s hours passed since last run, continuing...'
-                self.storage.add_message(message=message % hours_since_last_run, persist=True)
-                return False
+    def download_images(self, user: UserDao) -> UserDao:
+        for photo in user.photos:
+            directory_name: str = 'images/%s' % user.user_id
+            image_path = '%s/photo_%s.jpg' % (directory_name, math.ceil(random() * 100))
+            if not os.path.exists(directory_name):
+                os.mkdir(directory_name)
+            request = self.pool_manager.request('GET', url=photo.url, preload_content=False)
+            with open(image_path, 'wb') as out_file:
+                shutil.copyfileobj(request, out_file)
+            request.release_conn()
+            photo.url = image_path
+        return user
+
+    def like_teaser_profiles(self, other_teaser_name: Optional[str]) -> None:
+        try:
+            teaser_profile: Optional[UserTeaserDao] = self.get_teaser_profile()
+        except BaseError as e:
+            self.storage.add_message(message=e.message)
+            return
+
+        # Process remote teaser profile first
+        if teaser_profile is not None:
+            local_profiles: list[UserDao] = self.storage.get_users_by_name(name=teaser_profile.name)
+            if len(local_profiles) == 0:
+                message: str = 'Teaser profile(s) for %s not found locally, skipping...'
+                self.storage.add_message(message=message % teaser_profile.name, persist=False)
             else:
-                message: str = 'Only %s hours passed since last likes run, skipping...'
-                self.storage.add_message(message=message % hours_since_last_run, persist=True)
-                return True
-        return False  # likes not exhausted if setting is not found
+                message: str = '%s teaser profile(s) for %s found locally, sending like(s)...'
+                self.storage.add_message(message=message % (len(local_profiles), teaser_profile.name), persist=False)
+                for profile in local_profiles:
+                    self.like_user(user=profile)
+
+        # Process other teaser profiles as defined
+        if other_teaser_name is not None:
+            other_profiles: list[UserDao] = self.storage.get_users_by_name(name=other_teaser_name)
+            if len(other_profiles) == 0:
+                message: str = 'Other teaser profile(s) for %s not found locally, skipping...'
+                self.storage.add_message(message=message % other_teaser_name, persist=False)
+            else:
+                message: str = '%s of other teaser profile(s) for %s found locally, sending like(s)...'
+                self.storage.add_message(message=message % (len(other_profiles), other_teaser_name), persist=False)
+                for profile in other_profiles:
+                    self.like_user(user=profile)
+
+    def process_daily_likes(self, limit: int = 10) -> None:
+
+        profiles_liked = 0
+        profiles_missed = 0
+
+        while True:
+            try:
+                results: list[UserDao] = self.get_batch_profile_data()
+            except BaseError as e:
+                self.storage.add_message(message=e.message, persist=True)
+                return
+
+            for user in results:
+                time.sleep(1)  # wait between likes
+                if self.like_user(user=user):
+                    profiles_liked += 1
+                else:
+                    profiles_missed += 1
+
+            # Looks like new profiles are not issued when out of likes, so should be limited
+            if profiles_missed >= limit:
+                self.storage.add_message(message='Terminating daily likes, as likely run out of likes')
+                self.storage.record_daily_like_run()
+                return
 
     def collect_profiles(self, limit: int = 10) -> None:
 
@@ -113,75 +178,9 @@ class MainProcessor:
                     self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
                     profiles_missed += 1
 
-                if index == batch_size - 1:  # Pass at least one user in a batch
-                    self.pass_user(user=user)
-
                 if profiles_missed >= limit:
                     self.storage.add_message(message=terminate_message % (limit, profiles_added), persist=True)
                     return
-
-    def process_daily_likes(self, limit: int = 10) -> None:
-
-        profiles_liked = 0
-        profiles_missed = 0
-
-        if self.are_likes_exhausted():
-            return
-
-        while True:
-            try:
-                results: list[UserDao] = self.get_batch_profile_data()
-            except BaseError as e:
-                self.storage.add_message(message=e.message, persist=True)
-                return
-
-            for user in results:
-                time.sleep(1)  # wait between likes
-                if self.like_user(user=user):
-                    profiles_liked += 1
-                else:
-                    profiles_missed += 1
-
-            # Looks like new profiles are not issued when out of likes, so should be limited
-            if profiles_missed >= limit:
-                self.storage.add_message(message='Terminating daily likes, as likely run out of likes')
-                self.storage.record_daily_like_run()
-                return
-
-    def like_teaser_profiles(self, other_teaser_name: Optional[str]) -> None:
-
-        if self.are_likes_exhausted():
-            return
-
-        try:
-            teaser_profile: Optional[UserTeaserDao] = self.get_teaser_profile()
-        except BaseError as e:
-            self.storage.add_message(message=e.message)
-            return
-
-        # Process remote teaser profile first
-        if teaser_profile is not None:
-            local_profiles: list[UserDao] = self.storage.get_users_by_name(name=teaser_profile.name)
-            if len(local_profiles) == 0:
-                message: str = 'Teaser profile(s) for %s not found locally, skipping...'
-                self.storage.add_message(message=message % teaser_profile.name, persist=False)
-            else:
-                message: str = '%s teaser profile(s) for %s found locally, sending like(s)...'
-                self.storage.add_message(message=message % (len(local_profiles), teaser_profile.name), persist=False)
-                for profile in local_profiles:
-                    self.like_user(user=profile)
-
-        # Process other teaser profiles as defined
-        if other_teaser_name is not None:
-            other_profiles: list[UserDao] = self.storage.get_users_by_name(name=other_teaser_name)
-            if len(other_profiles) == 0:
-                message: str = 'Other teaser profile(s) for %s not found locally, skipping...'
-                self.storage.add_message(message=message % other_teaser_name, persist=False)
-            else:
-                message: str = '%s of other teaser profile(s) for %s found locally, sending like(s)...'
-                self.storage.add_message(message=message % (len(other_profiles), other_teaser_name), persist=False)
-                for profile in other_profiles:
-                    self.like_user(user=profile)
 
     def __init__(self, base_url: str, storage: PostgresStorage, auth_token: str):
         self.base_url = 'https://%s' % base_url

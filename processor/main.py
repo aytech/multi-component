@@ -2,6 +2,7 @@ import os
 import time
 
 from db.PostgresStorage import PostgresStorage
+from db.dao import RemainingLikesDao
 from utilities.MainProcessor import MainProcessor
 
 AUTH_TOKEN = os.environ.get('AUTH_TOKEN', default='')
@@ -16,7 +17,14 @@ if __name__ == '__main__':
     processor = MainProcessor(storage=storage_session, auth_token=AUTH_TOKEN, base_url=BASE_URL)
 
     while True:
-        processor.like_teaser_profiles(other_teaser_name=USER_TO_LIKE)
-        processor.process_daily_likes(limit=DAILY_LIKES_LIMIT)
+        remaining_likes: RemainingLikesDao = processor.remaining_likes()
+        if remaining_likes.likes_remaining < 1:
+            storage_session.add_message('No likes remaining till %s' % remaining_likes.rate_limited_until)
+        else:
+            storage_session.add_message('%s likes remaining' % remaining_likes.likes_remaining)
+            processor.like_teaser_profiles(other_teaser_name=USER_TO_LIKE)
+            processor.process_daily_likes(limit=DAILY_LIKES_LIMIT)
+
         processor.collect_profiles(limit=COLLECT_USER_LIMIT)
-        time.sleep(3600)
+
+        time.sleep(3600)  # wait for an hour
