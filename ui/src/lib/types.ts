@@ -1,5 +1,6 @@
 export interface Profile {
   city?: string
+  id: number
   liked: boolean
   name: string
   photos: Array<Photo>

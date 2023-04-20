@@ -52,7 +52,7 @@ function App() {
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
     <>
       <Search searchParams={ searchParams } />
-      <Gallery userData={ userData } />
+      <Gallery refetch={ fetchUserData } userData={ userData } />
       <Paginator currentPage={ currentPage } loadPage={ fetchUserData } userData={ userData } />
     </>
   ) : (
