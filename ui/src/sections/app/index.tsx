@@ -1,5 +1,5 @@
 import './styles.css'
-import { Button, Empty, Layout, List, Skeleton } from 'antd'
+import { Button, Empty, Layout, List, Skeleton, message } from 'antd'
 import { Content, Footer } from 'antd/es/layout/layout'
 import { Search } from '../search'
 import { Gallery } from '../gallery'
@@ -14,9 +14,25 @@ export const App = () => {
 
   const [ searchParams ] = useSearchParams()
 
+  const [ messageApi, contextHolder ] = message.useMessage();
+
   const [ currentPage, setCurrentPage ] = useState<Page>( { page: 1, size: 10 } )
   const [ userData, setUserData ] = useState<UsersData | null>( null )
   const [ loading, setLoading ] = useState<boolean>( true )
+
+  const errorMessage = ( message: string ) => {
+    messageApi.open( {
+      type: "error",
+      content: message,
+    } )
+  }
+
+  const successMessage = ( message: string ) => {
+    messageApi.open( {
+      type: "success",
+      content: message,
+    } )
+  }
 
   const fetchUserData = async () => {
     setLoading( true )
@@ -34,7 +50,12 @@ export const App = () => {
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
     <>
       <Search searchParams={ searchParams } />
-      <Gallery refetch={ fetchUserData } searchParams={ searchParams } userData={ userData } />
+      <Gallery
+        errorMessage={ errorMessage }
+        refetch={ fetchUserData }
+        searchParams={ searchParams }
+        successMessage={ successMessage }
+        userData={ userData } />
       <Paginator currentPage={ currentPage } searchParams={ searchParams } userData={ userData } />
     </>
   ) : (
@@ -68,6 +89,7 @@ export const App = () => {
 
   return (
     <Layout>
+      { contextHolder }
       <AppHeader />
       <Content className="app-content">
         <AppContent />

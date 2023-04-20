@@ -37,13 +37,13 @@ class PostgresStorage:
             users.append(self.get_user_dict(user=user))
         return users
 
-    def search_users(self, name_partial: str, page: int = 1, page_size: int = 10, liked: bool or None = None):
+    def search_users(self, name_partial: str, page: int = 1, size: int = 10, liked: bool or None = None):
         users: list[dict] = []
         statement: Select = select(User).where(User.name.like('%{}%'.format(name_partial)))
         if liked is not None:
             statement = statement.where(User.liked == liked)
         # paginate
-        statement.order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
+        statement = statement.order_by(User.created.desc()).offset((page - 1) * size).limit(size)
         for user in self.session.scalars(statement=statement).all():
             users.append(self.get_user_dict(user=user))
         return users
@@ -57,10 +57,12 @@ class PostgresStorage:
     def fetch_user_by_id(self, user_id: int) -> User:
         return self.session.scalars(statement=select(User).where(User.id == user_id)).one()
 
-    def delete_user_by_id(self, user_id: int) -> None:
+    def delete_user_by_id(self, user_id: int) -> User:
+        user: User = self.fetch_user_by_id(user_id=user_id)
         with self.session as session:
             session.delete(self.fetch_user_by_id(user_id=user_id))
             session.commit()
+        return user
 
     def update_user(self, user: User):
         with self.session as session:

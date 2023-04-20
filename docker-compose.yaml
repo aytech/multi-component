@@ -43,7 +43,7 @@ services:
     depends_on:
       - api
     ports:
-      - "3000:80"
+      - "8080:80"
   processor:
     container_name: processor
     image: ole-ya/processor

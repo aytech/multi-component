@@ -27,6 +27,21 @@ def get_liked_value(value: str or None) -> bool or None:
     return None
 
 
+def make_api_call_request(url: str, method: str):
+    request_headers = {'X-Auth-Token': AUTH_TOKEN, 'Host': BASE_URL}
+    pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+    return pool_manager.request(method=method, url=url, headers=request_headers)
+
+
+def get_remaining_likes() -> int:
+    url: str = 'https://%s/v2/profile?include=likes' % BASE_URL
+    like_request = make_api_call_request(url=url, method='GET')
+    data = json.loads(like_request.data.decode('utf-8'))
+    if 'data' in data:
+        return data['data']['likes']['likes_remaining']
+    return 0
+
+
 @app.route('/api/users', methods=['GET'])
 def get_users():
     page: int = 1
@@ -47,22 +62,26 @@ def get_users():
 @app.route('/api/users/search/<string:name>', methods=['GET'])
 def search_users(name: str):
     page: int = 1
-    page_size: int = PAGE_SIZE
+    size: int = PAGE_SIZE
     liked: bool or None = None
     try:
         page = int(request.args.get('page', default=1))
-        page_size = int(request.args.get('size', default=PAGE_SIZE))
+        size = int(request.args.get('size', default=PAGE_SIZE))
         liked = get_liked_value(request.args.get('liked'))
     except ValueError:
         pass
     return make_response(jsonify({
-        'users': storage_session.search_users(name_partial=name, page=page, page_size=page_size, liked=liked),
+        'users': storage_session.search_users(name_partial=name, page=page, size=size, liked=liked),
         'total': storage_session.fetch_filtered_users_count(name_partial=name)
     }))
 
 
 @app.route('/api/users/like/<int:user_id>', methods=['POST'])
 def like_user(user_id: int):
+    if get_remaining_likes() < 1:
+        return make_response(jsonify({
+            'message': 'No more likes available',
+        }), requests.status_codes.codes.bad_request)
     pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
     request_headers = {'X-Auth-Token': AUTH_TOKEN, 'Host': BASE_URL}
     user: User = storage_session.fetch_user_by_id(user_id=user_id)
@@ -93,9 +112,9 @@ def like_user(user_id: int):
 
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id: int):
-    storage_session.delete_user_by_id(user_id=user_id)
+    deleted_user: User = storage_session.delete_user_by_id(user_id=user_id)
     return make_response(jsonify({
-        'message': 'User deleted'
+        'message': 'User %s deleted' % deleted_user.name
     }), requests.status_codes.codes.ok)
 
 
