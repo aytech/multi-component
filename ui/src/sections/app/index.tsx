@@ -1,24 +1,22 @@
 import './styles.css'
-import { Button, Empty, Layout, List, Skeleton, message } from 'antd'
-import { Content, Footer } from 'antd/es/layout/layout'
-import { Search } from '../search'
-import { Gallery } from '../gallery'
+import { Layout, message, theme } from 'antd'
+import { Content } from 'antd/es/layout/layout'
 import { AppHeader } from '../header'
-import { useEffect, useState } from 'react'
-import { Page, UsersData } from '../../lib/types'
-import { Paginator } from '../paginator'
-import { useSearchParams } from 'react-router-dom'
-import { UrlUtility } from '../../lib/utilities'
+import { useState } from 'react'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import { AppSider } from '../sider'
+import { Profiles } from '../profiles'
+import { Settings } from '../settings'
+import { Logs } from '../logs'
 
 export const App = () => {
 
-  const [ searchParams ] = useSearchParams()
-
   const [ messageApi, contextHolder ] = message.useMessage();
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
 
-  const [ currentPage, setCurrentPage ] = useState<Page>( { page: 1, size: 10 } )
-  const [ userData, setUserData ] = useState<UsersData | null>( null )
-  const [ loading, setLoading ] = useState<boolean>( true )
+  const [ menuCollapsed, setMenuCollapsed ] = useState<boolean>( false );
 
   const errorMessage = ( message: string ) => {
     messageApi.open( {
@@ -34,67 +32,22 @@ export const App = () => {
     } )
   }
 
-  const fetchUserData = async () => {
-    setLoading( true )
-    const parameters: Page = UrlUtility.getSearchParameters( searchParams, currentPage.page, currentPage.size )
-    setCurrentPage( parameters )
-    const requestUrl = parameters.search !== undefined
-      ? UrlUtility.getUserSearchUrl( parameters )
-      : UrlUtility.getUsersUrl( parameters )
-    const response = await fetch( requestUrl );
-    const userData: UsersData = await response.json();
-    setUserData( userData )
-    setLoading( false )
-  }
-
-  const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
-    <>
-      <Search searchParams={ searchParams } />
-      <Gallery
-        errorMessage={ errorMessage }
-        refetch={ fetchUserData }
-        searchParams={ searchParams }
-        successMessage={ successMessage }
-        userData={ userData } />
-      <Paginator currentPage={ currentPage } searchParams={ searchParams } userData={ userData } />
-    </>
-  ) : (
-    <>
-      <Search searchParams={ searchParams } />
-      <Empty description="No profiles found">
-        <Button
-          type="primary"
-          onClick={ fetchUserData }>
-          Go back
-        </Button>
-      </Empty>
-    </>
-  )
-
-  const AppContent = () => loading ? (
-    <>
-      { [ 1, 2, 3, 4, 5 ].map( ( key ) => (
-        <Skeleton loading active avatar key={ key }>
-          <List.Item.Meta avatar={ <Skeleton.Image /> } />
-        </Skeleton>
-      ) ) }
-    </>
-  ) : (
-    <PageContent />
-  )
-
-  useEffect( () => {
-    fetchUserData()
-  }, [ searchParams ] )
-
   return (
     <Layout>
       { contextHolder }
-      <AppHeader />
-      <Content className="app-content">
-        <AppContent />
-      </Content>
-      <Footer>Footer</Footer>
+      <Router>
+        <AppSider menuCollapsed={ menuCollapsed } />
+        <Layout>
+          <AppHeader colorBgContainer={ colorBgContainer } menuCollapsed={ menuCollapsed } setMenuCollapsed={ setMenuCollapsed } />
+          <Content className="app-content">
+            <Routes>
+              <Route path="/" element={ <Profiles errorMessage={ errorMessage } successMessage={ successMessage } /> } />
+              <Route path="/logs" element={ <Logs /> } />
+              <Route path="/settings" element={ <Settings /> } />
+            </Routes>
+          </Content>
+        </Layout>
+      </Router>
     </Layout>
   )
 }

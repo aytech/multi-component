@@ -24,3 +24,8 @@ export interface Page {
   search?: string
   size: number
 }
+
+export interface LogsData {
+  last: boolean
+  logs: Array<string>
+}

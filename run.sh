@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-docker compose up --abort-on-container-exit
+docker compose -f docker-compose-dev.yaml up --abort-on-container-exit

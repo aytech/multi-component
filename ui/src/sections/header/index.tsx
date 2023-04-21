@@ -1,20 +1,36 @@
-import { Layout } from 'antd'
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { Button, Layout } from 'antd'
 
-export const AppHeader = () => {
+interface Props {
+  colorBgContainer: string
+  menuCollapsed: boolean
+  setMenuCollapsed: ( collapsed: boolean ) => void
+}
+
+export const AppHeader = ( {
+  colorBgContainer,
+  menuCollapsed,
+  setMenuCollapsed
+}: Props ) => {
 
   const { Header } = Layout
 
   return (
-    <Header className="app-header">
-      <div className="brand" />
-      {/* <Menu
-        theme="dark"
-        mode="horizontal"
-        defaultSelectedKeys={ [ '2' ] }
-        items={ new Array( 3 ).fill( null ).map( ( _, index ) => ( {
-          key: String( index + 1 ),
-          label: `nav ${ index + 1 }`,
-        } ) ) } /> */}
+    <Header
+      style={ {
+        padding: 0,
+        background: colorBgContainer,
+      } }>
+      <Button
+        type="text"
+        icon={ menuCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined /> }
+        onClick={ () => setMenuCollapsed( !menuCollapsed ) }
+        style={ {
+          fontSize: '16px',
+          width: 64,
+          height: 64,
+        } }
+      />
     </Header>
   )
 }

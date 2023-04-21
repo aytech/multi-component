@@ -139,6 +139,9 @@ class MainProcessor:
                     message: str = 'User %s (%s) was renewed'
                     self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
 
+                if index == batch_size - 1:  # Pass at least one user in a batch
+                    self.pass_user(user=user)
+
                 if profiles_collected >= limit:
                     message: str = 'Terminating collecting profiles, as limit of %s reached, added %s new users'
                     self.storage.add_message(message=message % (limit, new_profiles), persist=True)

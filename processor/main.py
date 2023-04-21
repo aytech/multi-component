@@ -15,11 +15,11 @@ if __name__ == '__main__':
 
     while True:
         remaining_likes: RemainingLikesDao = processor.remaining_likes()
-        if remaining_likes.likes_remaining < 1:
+        if (remaining_likes.likes_remaining - 10) < 1:  # leave 10 for manual likes
             storage_session.add_message('No likes remaining till %s' % remaining_likes.rate_limited_until)
         else:
             storage_session.add_message('%s likes remaining' % remaining_likes.likes_remaining)
-            processor.process_daily_likes(limit=remaining_likes.likes_remaining)
+            processor.process_daily_likes(limit=(remaining_likes.likes_remaining - 10))
 
         storage_session.add_message('Processing collecting profiles')
         processor.collect_profiles()
