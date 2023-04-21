@@ -62,5 +62,7 @@ class Results:
         data = Results.process_json_data(json_data=json_data)
         if 'likes' not in data:
             return None
+        if 'rate_limited_until' not in data['likes']:
+            return RemainingLikesDao(likes_remaining=data['likes']['likes_remaining'])
         return RemainingLikesDao(likes_remaining=data['likes']['likes_remaining'],
                                  rate_limited_until=data['likes']['rate_limited_until'])

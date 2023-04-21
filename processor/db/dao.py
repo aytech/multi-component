@@ -1,5 +1,4 @@
 import datetime
-from dateutil import tz
 from typing import Optional
 
 
@@ -50,8 +49,9 @@ class RemainingLikesDao:
     likes_remaining: int
     rate_limited_until: datetime
 
-    def __init__(self, likes_remaining: int, rate_limited_until: int):
+    def __init__(self, likes_remaining: int, rate_limited_until: int = None):
         self.likes_remaining = likes_remaining
-        # convert to seconds from millis
-        seconds = rate_limited_until // 1000
-        self.rate_limited_until = datetime.datetime.utcfromtimestamp(seconds)
+        if rate_limited_until is not None:
+            # convert to seconds from millis
+            seconds = rate_limited_until // 1000
+            self.rate_limited_until = datetime.datetime.utcfromtimestamp(seconds)

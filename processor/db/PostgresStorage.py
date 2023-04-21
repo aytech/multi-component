@@ -78,23 +78,6 @@ class PostgresStorage:
                 ))
                 session.commit()
 
-    def record_daily_like_run(self):
-        time_stamp = datetime.datetime.now()
-        setting_model = self.get_daily_run_setting()
-
-        with self.session as session:
-            if setting_model is None:
-                session.add(Settings(
-                    created=time_stamp,
-                    name=Settings.daily_run_table_name,
-                    value=str(time_stamp)
-                ))
-                session.commit()
-            else:
-                session.execute(
-                    statement=update(Settings).where(Settings.id == setting_model.id).values(value=str(time_stamp)))
-            session.commit()
-
     def update_user_like_status(self, user_id: str, status: bool):
         with self.session as session:
             session.execute(statement=update(User).where(User.user_id == user_id).values(liked=status))

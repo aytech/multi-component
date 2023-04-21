@@ -7,9 +7,6 @@ from utilities.MainProcessor import MainProcessor
 
 AUTH_TOKEN = os.environ.get('AUTH_TOKEN', default='')
 BASE_URL = os.environ.get('BASE_URL', default='')
-COLLECT_USER_LIMIT = int(os.environ.get('COLLECT_USER_LIMIT', default=10))
-DAILY_LIKES_LIMIT = int(os.environ.get('DAILY_LIKES_LIMIT', default=10))
-USER_TO_LIKE = os.environ.get('USER_TO_LIKE', default=None)
 
 if __name__ == '__main__':
     time.sleep(3)  # wait for DB to spin up
@@ -22,9 +19,9 @@ if __name__ == '__main__':
             storage_session.add_message('No likes remaining till %s' % remaining_likes.rate_limited_until)
         else:
             storage_session.add_message('%s likes remaining' % remaining_likes.likes_remaining)
-            processor.like_teaser_profiles(other_teaser_name=USER_TO_LIKE)
-            processor.process_daily_likes(limit=DAILY_LIKES_LIMIT)
+            processor.process_daily_likes(limit=remaining_likes.likes_remaining)
 
-        processor.collect_profiles(limit=COLLECT_USER_LIMIT)
+        storage_session.add_message('Processing collecting profiles')
+        processor.collect_profiles()
 
         time.sleep(3600)  # wait for an hour
