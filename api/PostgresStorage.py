@@ -1,10 +1,12 @@
+import datetime
+import json
 import os
 
 from sqlalchemy import create_engine, Select, select, func, update
 from sqlalchemy.orm import Session
 
 from dao import UserDao, PhotoDao
-from models import User
+from models import User, Log, Settings
 
 
 class PostgresStorage:
@@ -68,6 +70,36 @@ class PostgresStorage:
         with self.session as session:
             session.execute(statement=update(User).where(User.id == user.id).values(liked=user.liked))
             session.commit()
+
+    def get_logs(self, limit: int, from_index: int = None):
+        statement: Select = select(Log)
+        if from_index is not None:
+            statement = statement.where(Log.id <= from_index)
+        statement = statement.order_by(Log.id.desc()).limit(limit=limit)
+        return self.session.scalars(statement=statement).all()
+
+    def is_last_log(self, log_id: int) -> bool:
+        return self.session.query(Log.id).order_by(Log.id.desc()).limit(1).scalar() <= log_id
+
+    def add_update_api_key(self, key_value: str):
+        statement: Select = select(Settings).where(Settings.name == Settings.api_key_setting)
+        token_setting: Settings = self.session.scalar(statement=statement)
+        if token_setting is None:
+            token_setting = Settings(
+                created=datetime.datetime.now(),
+                name=Settings.api_key_setting,
+            )
+        token_setting.value = key_value
+        with self.session as session:
+            session.add(token_setting)
+            session.commit()
+
+    def get_teasers(self):
+        statement: Select = select(Settings).where(Settings.name == Settings.teasers_setting)
+        settings: Settings = self.session.scalar(statement=statement)
+        if settings is None:
+            return []
+        return json.loads(settings.value)
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (

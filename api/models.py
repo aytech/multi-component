@@ -3,6 +3,7 @@ from typing import List
 
 from sqlalchemy import String, Boolean, BigInteger, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy_serializer import SerializerMixin
 
 
 class Base(DeclarativeBase):
@@ -49,3 +50,28 @@ class User(Base):
             User(city={self.city!r}, id={self.id!r}, name={self.name!r}, s_number={self.s_number!r},
             'user_id={self.user_id})
         '''
+
+
+class Log(Base, SerializerMixin):
+    __tablename__ = 'log'
+
+    created: Mapped[datetime.datetime]
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f'Log(created={self.created!r}, id={self.id!r}, text={self.text!r})'
+
+
+class Settings(Base, SerializerMixin):
+    __tablename__ = 'settings'
+    api_key_setting = 'api_key_setting'
+    teasers_setting = 'teasers_setting'
+
+    created: Mapped[datetime.datetime]
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    value: Mapped[str] = mapped_column(String(100))
+
+    def __repr__(self):
+        return f'Settings(created={self.created!r}, id={self.id!r}, name={self.name!r}, value={self.value!r})'

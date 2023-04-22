@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Optional
 
 import certifi as certifi
 import requests as requests
@@ -9,7 +10,7 @@ from flask_cors import CORS
 from flask_restful import Api
 
 from PostgresStorage import PostgresStorage
-from models import User
+from models import User, Log
 
 storage_session = PostgresStorage()
 app = Flask(__name__)
@@ -115,6 +116,39 @@ def delete_user(user_id: int):
     deleted_user: User = storage_session.delete_user_by_id(user_id=user_id)
     return make_response(jsonify({
         'message': 'User %s deleted' % deleted_user.name
+    }), requests.status_codes.codes.ok)
+
+
+@app.route('/api/logs', methods=['GET'])
+def get_logs():
+    from_index: Optional[int] = None
+    limit: int = 100
+    try:
+        from_index_arg = request.args.get('from')
+        if from_index_arg is not None:
+            from_index = int(from_index_arg)
+        limit = int(request.args.get('limit', default=100))
+    except ValueError:
+        pass
+    logs: list[Log] = storage_session.get_logs(limit=limit, from_index=from_index)
+    return make_response(jsonify({
+        'logs': [log.to_dict() for log in logs],
+        'last': True if len(logs) == 0 else storage_session.is_last_log(log_id=logs[0].id)
+    }), requests.status_codes.codes.ok)
+
+
+@app.route('/api/settings/token/<string:token>', methods=['POST'])
+def add_or_update_token(token: str):
+    storage_session.add_update_api_key(key_value=token)
+    return make_response(jsonify({
+        'updated': True,
+    }), requests.status_codes.codes.ok)
+
+
+@app.route('/api/settings/teasers', methods=['GET'])
+def get_teasers():
+    return make_response(jsonify({
+        'teasers': storage_session.get_teasers(),
     }), requests.status_codes.codes.ok)
 
 
