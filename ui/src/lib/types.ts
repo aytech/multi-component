@@ -25,7 +25,17 @@ export interface Page {
   size: number
 }
 
+export interface Log {
+  created: string,
+  id: number,
+  text: string
+}
+
 export interface LogsData {
   last: boolean
-  logs: Array<string>
+  logs: Array<Log>
+}
+
+export interface TeaserData {
+  teasers: Array<string>
 }

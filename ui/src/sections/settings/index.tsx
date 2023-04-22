@@ -2,23 +2,24 @@ import { Col, Divider, List, Row } from "antd"
 import "./styles.css"
 import { useEffect, useState } from "react"
 import { UrlUtility } from "../../lib/utilities"
+import { TeaserData } from "../../lib/types"
 
 export const Settings = () => {
 
   const [ loading, setLoading ] = useState<boolean>( false )
-  const [ teaserList, setTeaserList ] = useState<Array<string>>( [] )
+  const [ teasers, setTeasers ] = useState<Array<string>>( [] )
 
-  const fetcTeaserList = async () => {
+  const fetcTeasers = async () => {
     setLoading( true )
     const response = await fetch( UrlUtility.getTeaserListsUrl() )
-    const teaserData: Array<string> = await response.json();
-    setTeaserList( teaserData )
+    const teaserData: TeaserData = await response.json();
+    setTeasers( teaserData.teasers )
     setLoading( false )
   }
 
   useEffect( () => {
-    fetcTeaserList()
-  } )
+    fetcTeasers()
+  }, [] )
 
   return (
     <>
@@ -36,7 +37,7 @@ export const Settings = () => {
       <List
         size="large"
         bordered
-        dataSource={ teaserList }
+        dataSource={ teasers }
         renderItem={ ( item ) => <List.Item>{ item }</List.Item> }
       />
     </>

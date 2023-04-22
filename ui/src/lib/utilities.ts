@@ -15,11 +15,15 @@ export const UrlUtility = {
     }
     return url
   },
-  getLogsUrl: ( from: number, chunk_size: number ) => {
-    return `/api/logs?from=${ from }&chunk=${ chunk_size }`
+  getLogsUrl: ( chunk_size: number, from: number | null ) => {
+    let url: string = `/api/logs?limit=${ chunk_size }`
+    if ( from !== null ) {
+      url += `&from=${ from }`
+    }
+    return url
   },
   getTeaserListsUrl: () => {
-    return "/api/teasers"
+    return "/api/settings/teasers"
   },
   getSearchParameters: ( parameters: URLSearchParams, defaultPage: number, defaultSize: number ): Page => {
     const searchParameters: Page = { page: defaultPage, size: defaultSize }
