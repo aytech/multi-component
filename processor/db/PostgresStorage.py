@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 from typing import Optional
 
@@ -68,7 +69,7 @@ class PostgresStorage:
             ))
             session.commit()
 
-    def add_message(self, message: str, persist: bool = False):
+    def add_message(self, message: str, persist: bool = True):
         print('[DEBUG][%s]: %s' % (DateProcessor.get_current_date(), message,))
         if persist:
             with self.session as session:
@@ -94,6 +95,24 @@ class PostgresStorage:
             session.delete(user)
             session.commit()
         self.add_user(user=user_dao)
+
+    def add_teaser(self, teaser: str):
+        statement: Select = select(Settings).where(Settings.name == Settings.teasers_setting)
+        teaser_setting: Settings = self.session.scalar(statement=statement)
+        teasers: list[str] = []
+        if teaser_setting is None:
+            teaser_setting = Settings(
+                created=datetime.datetime.now(),
+                name=Settings.teasers_setting,
+            )
+        else:
+            teasers = json.loads(teaser_setting.value)
+        if teaser not in teasers:
+            teasers.append(teaser)
+            teaser_setting.value = json.dumps(teasers)
+            with self.session as session:
+                session.add(teaser_setting)
+                session.commit()
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (

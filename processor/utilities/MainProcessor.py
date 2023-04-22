@@ -147,6 +147,11 @@ class MainProcessor:
                     self.storage.add_message(message=message % (limit, new_profiles), persist=True)
                     return
 
+    def collect_teaser(self):
+        teaser: Optional[UserTeaserDao] = self.get_teaser_profile()
+        if teaser is not None:
+            self.storage.add_teaser(teaser=teaser.name)
+
     def __init__(self, base_url: str, storage: PostgresStorage, auth_token: str):
         self.base_url = 'https://%s' % base_url
         self.storage = storage

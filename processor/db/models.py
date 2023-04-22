@@ -54,6 +54,7 @@ class Photo(Base):
 class Settings(Base):
     __tablename__ = 'settings'
     daily_run_table_name = 'daily_like_last_run'
+    teasers_setting = 'teasers_setting'
 
     created: Mapped[datetime.datetime]
     id: Mapped[int] = mapped_column(primary_key=True)

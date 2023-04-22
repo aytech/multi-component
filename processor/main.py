@@ -21,7 +21,7 @@ if __name__ == '__main__':
             storage_session.add_message('%s likes remaining' % remaining_likes.likes_remaining)
             processor.process_daily_likes(limit=(remaining_likes.likes_remaining - 10))
 
-        storage_session.add_message('Processing collecting profiles')
+        processor.collect_teaser()
         processor.collect_profiles()
 
         time.sleep(3600)  # wait for an hour
