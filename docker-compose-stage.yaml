@@ -2,11 +2,6 @@ version: "3.9"
 name: "runner"
 
 services:
-  registry:
-    container_name: registry
-    image: registry:2
-    ports:
-      - "5000:5000"
   db:
     container_name: storage
     image: postgres
@@ -16,6 +11,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+  pg-admin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=postgres
+    ports:
+      - "8888:80"
   api:
     container_name: api
     image: localhost:5000/ole-ya/api
