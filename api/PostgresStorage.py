@@ -5,8 +5,8 @@ import os
 from sqlalchemy import create_engine, Select, select, func, update
 from sqlalchemy.orm import Session
 
-from dao import UserDao, PhotoDao
-from models import User, Log, Settings
+from db.dao import UserDao, PhotoDao
+from db.models import User, Log, Settings
 
 
 class PostgresStorage:

@@ -10,7 +10,9 @@ from flask_cors import CORS
 from flask_restful import Api
 
 from PostgresStorage import PostgresStorage
-from models import User, Log
+from db.dao import RemainingLikesDao
+from db.models import User, Log
+from utilities.Results import Results
 
 storage_session = PostgresStorage()
 app = Flask(__name__)
@@ -150,6 +152,22 @@ def get_teasers():
     return make_response(jsonify({
         'teasers': storage_session.get_teasers(),
     }), requests.status_codes.codes.ok)
+
+
+@app.route('/api/settings/likes', methods=['GET'])
+def get_likes_remaining():
+    url: str = 'https://%s/v2/profile?include=likes' % BASE_URL
+    response = make_api_call_request(url=url, method='GET')
+    if response.status == requests.status_codes.codes.unauthorized:
+        return make_response(jsonify({
+            'message': 'Unauthorized',
+        }), requests.status_codes.codes.unauthorized)
+    if response.status == requests.status_codes.codes.forbidden:
+        return make_response(jsonify({
+            'message': 'Forbidden',
+        }), requests.status_codes.codes.forbidden)
+    likes: RemainingLikesDao = Results.remaining_likes(json_data=json.loads(response.data.decode('utf-8')))
+    return make_response(jsonify(likes.to_dict()), requests.status_codes.codes.ok)
 
 
 if __name__ == '__main__':

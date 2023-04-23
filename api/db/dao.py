@@ -1,4 +1,7 @@
+from datetime import datetime
 from typing import Optional
+
+from sqlalchemy_serializer import SerializerMixin
 
 
 class PhotoDao:
@@ -37,3 +40,18 @@ class UserDao:
             User(city={self.city!r}, id={self.id}, liked={self.liked!r},, name={self.name!r},
             photos={[str(photo) for photo in self.photos]} s_number={self.s_number!r}, 'user_id={self.user_id})
         '''
+
+
+class RemainingLikesDao:
+    likes_remaining: int
+    rate_limited_until: datetime
+
+    def __init__(self, likes_remaining: int, rate_limited_until: int = None):
+        self.likes_remaining = likes_remaining
+        if rate_limited_until is not None:
+            # convert to seconds from millis
+            seconds = rate_limited_until // 1000
+            self.rate_limited_until = datetime.utcfromtimestamp(seconds)
+
+    def to_dict(self):
+        return {'likes_remaining': self.likes_remaining, 'rate_limited_until': self.rate_limited_until}

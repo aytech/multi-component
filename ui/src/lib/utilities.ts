@@ -25,6 +25,9 @@ export const UrlUtility = {
   getTeaserListsUrl: () => {
     return "/api/settings/teasers"
   },
+  getSettingsLikesUrl: () => {
+    return "/api/settings/likes"
+  },
   getSearchParameters: ( parameters: URLSearchParams, defaultPage: number, defaultSize: number ): Page => {
     const searchParameters: Page = { page: defaultPage, size: defaultSize }
     let page: number | string | null = parameters.get( "page" )

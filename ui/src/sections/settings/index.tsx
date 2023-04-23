@@ -2,12 +2,13 @@ import { Col, Divider, List, Row } from "antd"
 import "./styles.css"
 import { useEffect, useState } from "react"
 import { UrlUtility } from "../../lib/utilities"
-import { TeaserData } from "../../lib/types"
+import { LikesData, TeaserData } from "../../lib/types"
 
 export const Settings = () => {
 
   const [ loading, setLoading ] = useState<boolean>( false )
   const [ teasers, setTeasers ] = useState<Array<string>>( [] )
+  const [ likes, setLikes ] = useState<LikesData>()
 
   const fetcTeasers = async () => {
     setLoading( true )
@@ -17,8 +18,17 @@ export const Settings = () => {
     setLoading( false )
   }
 
+  const fetcLikes = async () => {
+    setLoading( true )
+    const response = await fetch( UrlUtility.getSettingsLikesUrl() )
+    const likesData: LikesData = await response.json()
+    setLikes( likesData )
+    setLoading( false )
+  }
+
   useEffect( () => {
     fetcTeasers()
+    fetcLikes()
   }, [] )
 
   return (
@@ -39,6 +49,18 @@ export const Settings = () => {
         bordered
         dataSource={ teasers }
         renderItem={ ( item ) => <List.Item>{ item }</List.Item> }
+      />
+      <Divider className="settings-divider" orientation="left">Likes remaining</Divider>
+      <List
+        size="large"
+        bordered
+        dataSource={ [ { ...likes, key: 1 } ] }
+        renderItem={ ( item ) => (
+          <List.Item>
+            <strong>Remaining:</strong> { item.likes_remaining }&nbsp;
+            <strong>until:</strong> { item.rate_limited_until }
+          </List.Item>
+        ) }
       />
     </>
   )

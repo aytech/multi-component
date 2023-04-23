@@ -39,3 +39,8 @@ export interface LogsData {
 export interface TeaserData {
   teasers: Array<string>
 }
+
+export interface LikesData {
+  likes_remaining: number
+  rate_limited_until: string
+}
