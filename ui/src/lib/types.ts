@@ -36,7 +36,9 @@ export interface LogsData {
   logs: Array<Log>
 }
 
-export interface TeaserData {
+export interface SettingsData {
+  api_key: string
+  base_url: string
   teasers: Array<string>
 }
 

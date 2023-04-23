@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+from typing import Optional
 
 from sqlalchemy import create_engine, Select, select, func, update
 from sqlalchemy.orm import Session
@@ -94,12 +95,35 @@ class PostgresStorage:
             session.add(token_setting)
             session.commit()
 
+    def add_update_base_url(self, url_value: str):
+        statement: Select = select(Settings).where(Settings.name == Settings.base_url_setting)
+        url_setting: Settings = self.session.scalar(statement=statement)
+        if url_setting is None:
+            url_setting = Settings(
+                created=datetime.datetime.now(),
+                name=Settings.base_url_setting,
+            )
+        url_setting.value = url_value
+        with self.session as session:
+            session.add(url_setting)
+            session.commit()
+
     def get_teasers(self):
         statement: Select = select(Settings).where(Settings.name == Settings.teasers_setting)
         settings: Settings = self.session.scalar(statement=statement)
         if settings is None:
             return []
         return json.loads(settings.value)
+
+    def get_api_key(self):
+        statement: Select = select(Settings).where(Settings.name == Settings.api_key_setting)
+        settings: Settings = self.session.scalar(statement=statement)
+        return None if settings is None else settings.value
+
+    def get_base_url(self) -> Optional[Settings]:
+        statement: Select = select(Settings).where(Settings.name == Settings.base_url_setting)
+        settings: Settings = self.session.scalar(statement=statement)
+        return None if settings is None else settings.value
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (

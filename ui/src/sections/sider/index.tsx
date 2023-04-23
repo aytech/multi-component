@@ -1,8 +1,9 @@
 import { SettingOutlined, SnippetsOutlined, UserOutlined } from "@ant-design/icons"
 import { Menu } from "antd"
 import Sider from "antd/es/layout/Sider"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import "./styles.css"
+import { useEffect, useState } from "react"
 
 interface Props {
   menuCollapsed: boolean
@@ -10,9 +11,26 @@ interface Props {
 
 export const AppSider = ( { menuCollapsed }: Props ) => {
 
+  const location = useLocation()
   const navigate = useNavigate()
 
   const [ searchParams ] = useSearchParams()
+
+  const [ selectedKeys, setSelectedKeys ] = useState<string[]>( [ "1" ] )
+
+  useEffect( () => {
+    switch ( location.pathname ) {
+      case "/logs":
+        setSelectedKeys( [ "2" ] )
+        break
+      case "/settings":
+        setSelectedKeys( [ "3" ] )
+        break
+      default:
+        setSelectedKeys( [ "1" ] )
+    }
+
+  }, [ location ] )
 
   return (
     <Sider trigger={ null } collapsible collapsed={ menuCollapsed }>
@@ -20,7 +38,7 @@ export const AppSider = ( { menuCollapsed }: Props ) => {
       <Menu
         theme="dark"
         mode="inline"
-        defaultSelectedKeys={ [ '1' ] }
+        selectedKeys={ selectedKeys }
         items={ [
           {
             key: "1",

@@ -43,7 +43,7 @@ export const App = () => {
             <Routes>
               <Route path="/" element={ <Profiles errorMessage={ errorMessage } successMessage={ successMessage } /> } />
               <Route path="/logs" element={ <Logs /> } />
-              <Route path="/settings" element={ <Settings /> } />
+              <Route path="/settings" element={ <Settings errorMessage={ errorMessage } successMessage={ successMessage } /> } />
             </Routes>
           </Content>
         </Layout>

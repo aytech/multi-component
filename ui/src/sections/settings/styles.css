@@ -1,3 +1,11 @@
 .ant-divider-horizontal.ant-divider-with-text.settings-divider {
   margin-top: 50px;
 }
+
+.ant-row.settings-url, .ant-row.settings-key {
+  margin-bottom: 10px;
+}
+
+.settings-key .ant-col {
+  margin-top: 10px;
+}

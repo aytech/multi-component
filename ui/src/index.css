@@ -11,6 +11,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.ant-btn.addon-button {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  height: 100%;
+  line-height: 0;
+}
+
 .text-center {
   text-align: center;
 }

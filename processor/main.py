@@ -1,17 +1,13 @@
-import os
 import time
 
 from db.PostgresStorage import PostgresStorage
 from db.dao import RemainingLikesDao
 from utilities.MainProcessor import MainProcessor
 
-AUTH_TOKEN = os.environ.get('AUTH_TOKEN', default='')
-BASE_URL = os.environ.get('BASE_URL', default='')
-
 if __name__ == '__main__':
     time.sleep(3)  # wait for DB to spin up
     storage_session = PostgresStorage()
-    processor = MainProcessor(storage=storage_session, auth_token=AUTH_TOKEN, base_url=BASE_URL)
+    processor = MainProcessor(storage=storage_session)
 
     while True:
         remaining_likes: RemainingLikesDao = processor.remaining_likes()

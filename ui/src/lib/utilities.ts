@@ -22,11 +22,17 @@ export const UrlUtility = {
     }
     return url
   },
-  getTeaserListsUrl: () => {
-    return "/api/settings/teasers"
+  getSettingsUrl: () => {
+    return "/api/settings"
   },
   getSettingsLikesUrl: () => {
     return "/api/settings/likes"
+  },
+  getSettingsUpdateApiKeyUrl: ( keyValue: string ) => {
+    return `/api/settings/token/${ keyValue }`
+  },
+  getSettingsBaseUrl: ( urlValue: string ) => {
+    return `/api/settings/url/${ urlValue }`
   },
   getSearchParameters: ( parameters: URLSearchParams, defaultPage: number, defaultSize: number ): Page => {
     const searchParameters: Page = { page: defaultPage, size: defaultSize }

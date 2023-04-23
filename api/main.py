@@ -147,9 +147,19 @@ def add_or_update_token(token: str):
     }), requests.status_codes.codes.ok)
 
 
-@app.route('/api/settings/teasers', methods=['GET'])
-def get_teasers():
+@app.route('/api/settings/url/<string:url>', methods=['POST'])
+def add_or_update_base_url(url: str):
+    storage_session.add_update_base_url(url_value=url)
     return make_response(jsonify({
+        'updated': True,
+    }), requests.status_codes.codes.ok)
+
+
+@app.route('/api/settings', methods=['GET'])
+def get_settings():
+    return make_response(jsonify({
+        'api_key': storage_session.get_api_key(),
+        'base_url': storage_session.get_base_url(),
         'teasers': storage_session.get_teasers(),
     }), requests.status_codes.codes.ok)
 

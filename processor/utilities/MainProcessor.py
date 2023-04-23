@@ -152,8 +152,8 @@ class MainProcessor:
         if teaser is not None:
             self.storage.add_teaser(teaser=teaser.name)
 
-    def __init__(self, base_url: str, storage: PostgresStorage, auth_token: str):
-        self.base_url = 'https://%s' % base_url
+    def __init__(self, storage: PostgresStorage):
+        self.base_url = 'https://%s' % storage.get_base_url()
         self.storage = storage
-        self.request_headers = {'X-Auth-Token': auth_token, 'Host': base_url}
+        self.request_headers = {'X-Auth-Token': storage.get_api_key(), 'Host': storage.get_base_url()}
         self.pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())

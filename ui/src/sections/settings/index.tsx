@@ -1,67 +1,157 @@
-import { Col, Divider, List, Row } from "antd"
+import { Button, Col, Divider, Input, List, Row, Skeleton } from "antd"
 import "./styles.css"
 import { useEffect, useState } from "react"
 import { UrlUtility } from "../../lib/utilities"
-import { LikesData, TeaserData } from "../../lib/types"
+import { LikesData, SettingsData } from "../../lib/types"
+import { ApiOutlined, KeyOutlined, SaveOutlined } from "@ant-design/icons"
 
-export const Settings = () => {
+interface Props {
+  errorMessage: ( message: string ) => void
+  successMessage: ( message: string ) => void
+}
 
-  const [ loading, setLoading ] = useState<boolean>( false )
-  const [ teasers, setTeasers ] = useState<Array<string>>( [] )
+export const Settings = ( {
+  errorMessage,
+  successMessage
+}: Props ) => {
+
+  const rowGutter = { xs: 8, sm: 16, md: 24, lg: 32 }
+
+  const [ apiKey, setApiKey ] = useState<string>()
+  const [ apiLoading, setApiLoading ] = useState<boolean>( false )
+  const [ baseUrl, setBaseUrl ] = useState<string>()
   const [ likes, setLikes ] = useState<LikesData>()
+  const [ likesLoading, setLikesLoading ] = useState<boolean>( false )
+  const [ settings, setSettings ] = useState<SettingsData>()
+  const [ settingsLoading, setSettingsLoading ] = useState<boolean>( false )
+  const [ urlLoading, setUrlLoading ] = useState<boolean>( false )
 
-  const fetcTeasers = async () => {
-    setLoading( true )
-    const response = await fetch( UrlUtility.getTeaserListsUrl() )
-    const teaserData: TeaserData = await response.json();
-    setTeasers( teaserData.teasers )
-    setLoading( false )
+  const fetchSettings = async () => {
+    setSettingsLoading( true )
+    const response = await fetch( UrlUtility.getSettingsUrl() )
+    const settingsData: SettingsData = await response.json();
+    setSettings( settingsData )
+    setSettingsLoading( false )
   }
 
   const fetcLikes = async () => {
-    setLoading( true )
+    setLikesLoading( true )
     const response = await fetch( UrlUtility.getSettingsLikesUrl() )
     const likesData: LikesData = await response.json()
     setLikes( likesData )
-    setLoading( false )
+    setLikesLoading( false )
   }
 
+  const updateApiKey = async () => {
+    if ( apiKey !== undefined ) {
+      setApiLoading( true )
+      const response = await fetch( UrlUtility.getSettingsUpdateApiKeyUrl( apiKey ), { method: "POST" } )
+      if ( response.status == 200 ) {
+        successMessage( "API key updated" )
+        setApiKey( undefined )
+      } else {
+        errorMessage( "Failed to update API key" )
+      }
+      setApiLoading( false )
+    }
+  }
+
+  const updateBaseUrl = async () => {
+    if ( baseUrl !== undefined ) {
+      setUrlLoading( true )
+      const response = await fetch( UrlUtility.getSettingsBaseUrl( baseUrl ), { method: "POST" } )
+      if ( response.status == 200 ) {
+        successMessage( "Base URL updated" )
+      } else {
+        errorMessage( "Failed to update Base URL" )
+      }
+      setUrlLoading( false )
+    }
+  }
+
+  const Teasers = () => settingsLoading ? (
+    <Skeleton loading active>
+      <List.Item.Meta avatar={ <Skeleton.Image /> } />
+    </Skeleton>
+  ) : (
+    <List
+      size="large"
+      bordered
+      dataSource={ settings?.teasers }
+      renderItem={ ( item ) => <List.Item>{ item }</List.Item> }
+    />
+  )
+
+  const Likes = () => likesLoading ? (
+    <Skeleton loading active>
+      <List.Item.Meta avatar={ <Skeleton.Image /> } />
+    </Skeleton>
+  ) : (
+    <List
+      size="large"
+      bordered
+      dataSource={ [ { ...likes, key: 1 } ] }
+      renderItem={ ( item ) => (
+        <List.Item>
+          <strong>Remaining:</strong> { item.likes_remaining }&nbsp;
+          <strong>until:</strong> { item.rate_limited_until }
+        </List.Item>
+      ) }
+    />
+  )
+
   useEffect( () => {
-    fetcTeasers()
+    fetchSettings()
     fetcLikes()
   }, [] )
 
   return (
     <>
-      <Divider className="settings-divider" orientation="left">API key</Divider>
-      <Row gutter={ {
-        xs: 8,
-        sm: 16,
-        md: 24,
-        lg: 32,
-      } }>
-        <Col className="gutter-row" span={ 6 }>Add / Update API key</Col>
-        <Col className="gutter-row" span={ 6 }>Input here</Col>
+      <Divider className="settings-divider" orientation="left">Settings</Divider>
+      <Row className="settings-key" gutter={ rowGutter }>
+        <Col className="gutter-row" xs={ 24 } sm={ 8 } md={ 6 } xl={ 4 }>
+          Add / Update API key
+        </Col>
+        <Col className="gutter-row" xs={ 24 } sm={ 16 } md={ 18 } xl={ 20 }>
+          <Input
+            addonBefore={ <KeyOutlined /> }
+            addonAfter={ (
+              <Button
+                className="addon-button"
+                loading={ apiLoading }
+                onClick={ updateApiKey }>
+                <SaveOutlined />
+              </Button>
+            ) }
+            onChange={ ( event: any ) => setApiKey( event.target.value ) }
+            placeholder={ settings === undefined || settings.api_key === null ? "" : new Array( settings.api_key.length ).join( "*" ) }
+            value={ apiKey } />
+        </Col>
+      </Row>
+      <Row className="settings-url" gutter={ rowGutter }>
+        <Col className="gutter-row" xs={ 24 } sm={ 8 } md={ 6 } xl={ 4 }>
+          Add / Update base URL
+        </Col>
+        <Col className="gutter-row" xs={ 24 } sm={ 16 } md={ 18 } xl={ 20 }>
+          <Input
+            addonBefore={ <ApiOutlined /> }
+            addonAfter={ (
+              <Button
+                className="addon-button"
+                loading={ urlLoading }
+                onClick={ updateBaseUrl }>
+                <SaveOutlined />
+              </Button>
+            ) }
+            onChange={ ( event: any ) => setBaseUrl( event.target.value ) }
+            placeholder={ settings?.base_url }
+            value={ baseUrl } />
+        </Col>
       </Row>
       <Divider className="settings-divider" orientation="left">Teaser likes</Divider>
-      <List
-        size="large"
-        bordered
-        dataSource={ teasers }
-        renderItem={ ( item ) => <List.Item>{ item }</List.Item> }
-      />
+      <Teasers />
       <Divider className="settings-divider" orientation="left">Likes remaining</Divider>
-      <List
-        size="large"
-        bordered
-        dataSource={ [ { ...likes, key: 1 } ] }
-        renderItem={ ( item ) => (
-          <List.Item>
-            <strong>Remaining:</strong> { item.likes_remaining }&nbsp;
-            <strong>until:</strong> { item.rate_limited_until }
-          </List.Item>
-        ) }
-      />
+      <Likes />
     </>
   )
 }

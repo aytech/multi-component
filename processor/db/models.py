@@ -53,7 +53,9 @@ class Photo(Base):
 
 class Settings(Base):
     __tablename__ = 'settings'
-    daily_run_table_name = 'daily_like_last_run'
+
+    api_key_setting = 'api_key_setting'
+    base_url_setting = 'base_url'
     teasers_setting = 'teasers_setting'
 
     created: Mapped[datetime.datetime]

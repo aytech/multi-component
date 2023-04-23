@@ -84,10 +84,15 @@ class PostgresStorage:
             session.execute(statement=update(User).where(User.user_id == user_id).values(liked=status))
             session.commit()
 
-    def get_daily_run_setting(self) -> Optional[Settings]:
-        setting_name: str = Settings.daily_run_table_name
-        select_statement = select(Settings).where(Settings.name == setting_name)
-        return self.session.scalars(statement=select_statement).one_or_none()
+    def get_api_key(self) -> Optional[str]:
+        statement: Select = select(Settings).where(Settings.name == Settings.api_key_setting)
+        api_key: Settings = self.session.scalar(statement=statement)
+        return None if api_key is None else api_key.value
+
+    def get_base_url(self) -> Optional[str]:
+        statement: Select = select(Settings).where(Settings.name == Settings.base_url_setting)
+        base_url: Settings = self.session.scalar(statement=statement)
+        return None if base_url is None else base_url.value
 
     def renew_user(self, user_dao: UserDao):
         user: User = self.session.scalars(statement=select(User).where(User.user_id == user_dao.user_id)).one()
