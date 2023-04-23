@@ -54,9 +54,9 @@ class Photo(Base):
 class Settings(Base):
     __tablename__ = 'settings'
 
-    api_key_setting = 'api_key_setting'
+    api_key_setting = 'api_key'
     base_url_setting = 'base_url'
-    teasers_setting = 'teasers_setting'
+    teasers_setting = 'teasers'
 
     created: Mapped[datetime.datetime]
     id: Mapped[int] = mapped_column(primary_key=True)

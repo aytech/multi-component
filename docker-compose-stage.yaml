@@ -24,7 +24,6 @@ services:
     depends_on:
       - db
     environment:
-      PAGE_SIZE: ${PAGE_SIZE}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: storage
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

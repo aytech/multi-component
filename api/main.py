@@ -1,5 +1,4 @@
 import json
-import os
 from typing import Optional
 
 import certifi as certifi
@@ -19,10 +18,6 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
-PAGE_SIZE: int = int(os.environ.get('PAGE_SIZE', default=10))
-AUTH_TOKEN: str = os.environ.get('AUTH_TOKEN')
-BASE_URL: str = os.environ.get('BASE_URL')
-
 
 def get_liked_value(value: str or None) -> bool or None:
     if value is not None:
@@ -30,14 +25,17 @@ def get_liked_value(value: str or None) -> bool or None:
     return None
 
 
+def get_headers() -> dict:
+    return {'X-Auth-Token': storage_session.get_api_key(), 'Host': storage_session.get_base_url()}
+
+
 def make_api_call_request(url: str, method: str):
-    request_headers = {'X-Auth-Token': AUTH_TOKEN, 'Host': BASE_URL}
     pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
-    return pool_manager.request(method=method, url=url, headers=request_headers)
+    return pool_manager.request(method=method, url=url, headers=get_headers())
 
 
 def get_remaining_likes() -> int:
-    url: str = 'https://%s/v2/profile?include=likes' % BASE_URL
+    url: str = 'https://%s/v2/profile?include=likes' % storage_session.get_base_url()
     like_request = make_api_call_request(url=url, method='GET')
     data = json.loads(like_request.data.decode('utf-8'))
     if 'data' in data:
@@ -48,11 +46,11 @@ def get_remaining_likes() -> int:
 @app.route('/api/users', methods=['GET'])
 def get_users():
     page: int = 1
-    page_size: int = PAGE_SIZE
+    page_size: int = 10
     liked: bool or None = None
     try:
         page = int(request.args.get('page', default=1))
-        page_size = int(request.args.get('size', default=PAGE_SIZE))
+        page_size = int(request.args.get('size', default=10))
         liked = get_liked_value(request.args.get('liked'))
     except ValueError:
         pass
@@ -65,11 +63,11 @@ def get_users():
 @app.route('/api/users/search/<string:name>', methods=['GET'])
 def search_users(name: str):
     page: int = 1
-    size: int = PAGE_SIZE
+    size: int = 10
     liked: bool or None = None
     try:
         page = int(request.args.get('page', default=1))
-        size = int(request.args.get('size', default=PAGE_SIZE))
+        size = int(request.args.get('size', default=10))
         liked = get_liked_value(request.args.get('liked'))
     except ValueError:
         pass
@@ -85,8 +83,6 @@ def like_user(user_id: int):
         return make_response(jsonify({
             'message': 'No more likes available',
         }), requests.status_codes.codes.bad_request)
-    pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
-    request_headers = {'X-Auth-Token': AUTH_TOKEN, 'Host': BASE_URL}
     user: User = storage_session.fetch_user_by_id(user_id=user_id)
     if user is None:
         return make_response(jsonify({
@@ -97,8 +93,9 @@ def like_user(user_id: int):
             'message': 'User has no photos'
         }), requests.status_codes.codes.bad_request)
     else:
-        url: str = 'https://%s/like/%s' % (BASE_URL, user.user_id)
-        like_request = pool_manager.request(method='POST', url=url, headers=request_headers, body=json.dumps({
+        url: str = 'https://%s/like/%s' % (storage_session.get_base_url(), user.user_id)
+        pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+        like_request = pool_manager.request(method='POST', url=url, headers=get_headers(), body=json.dumps({
             's_number': user.s_number,
             'liked_content_id': user.photos[0].photo_id,
             'liked_content_type': 'photo'
@@ -166,7 +163,7 @@ def get_settings():
 
 @app.route('/api/settings/likes', methods=['GET'])
 def get_likes_remaining():
-    url: str = 'https://%s/v2/profile?include=likes' % BASE_URL
+    url: str = 'https://%s/v2/profile?include=likes' % storage_session.get_base_url()
     response = make_api_call_request(url=url, method='GET')
     if response.status == requests.status_codes.codes.unauthorized:
         return make_response(jsonify({
