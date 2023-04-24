@@ -56,6 +56,7 @@ class Settings(Base):
 
     api_key_setting = 'api_key'
     base_url_setting = 'base_url'
+    remaining_likes_setting = 'remaining_likes'
     teasers_setting = 'teasers'
 
     created: Mapped[datetime.datetime]

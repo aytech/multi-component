@@ -79,11 +79,6 @@ class PostgresStorage:
                 ))
                 session.commit()
 
-    def update_user_like_status(self, user_id: str, status: bool):
-        with self.session as session:
-            session.execute(statement=update(User).where(User.user_id == user_id).values(liked=status))
-            session.commit()
-
     def get_api_key(self) -> Optional[str]:
         statement: Select = select(Settings).where(Settings.name == Settings.api_key_setting)
         api_key: Settings = self.session.scalar(statement=statement)
@@ -93,6 +88,34 @@ class PostgresStorage:
         statement: Select = select(Settings).where(Settings.name == Settings.base_url_setting)
         base_url: Settings = self.session.scalar(statement=statement)
         return None if base_url is None else base_url.value
+
+    def get_remaining_likes(self) -> int:
+        statement: Select = select(Settings).where(Settings.name == Settings.remaining_likes_setting)
+        remaining_likes: Settings = self.session.scalar(statement=statement)
+        return 0 if remaining_likes is None else remaining_likes.value
+
+    def update_user_like_status(self, user_id: str, status: bool):
+        with self.session as session:
+            session.execute(statement=update(User).where(User.user_id == user_id).values(liked=status))
+            session.commit()
+
+    def add_update_remaining_likes(self, remaining_likes: int):
+        statement: Select = select(Settings).where(Settings.name == Settings.remaining_likes_setting)
+        remaining_likes_setting: Settings = self.session.scalar(statement=statement)
+        if remaining_likes_setting is None:
+            with self.session as session:
+                session.add(Settings(
+                    created=datetime.datetime.now(),
+                    name=Settings.remaining_likes_setting,
+                    value=remaining_likes
+                ))
+                session.commit()
+        else:
+            with self.session as session:
+                session.execute(
+                    statement=update(Settings).where(Settings.id == remaining_likes_setting.id).values(
+                        value=remaining_likes))
+                session.commit()
 
     def renew_user(self, user_dao: UserDao):
         user: User = self.session.scalars(statement=select(User).where(User.user_id == user_dao.user_id)).one()

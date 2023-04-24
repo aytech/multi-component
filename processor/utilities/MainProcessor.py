@@ -64,12 +64,11 @@ class MainProcessor:
             'liked_content_type': 'photo'
         }))
         message = 'User %s (%s) is liked with status %s'
-        response_status = request.status
-        self.storage.add_message(message=message % (user.name, user.user_id, response_status), persist=True)
+        self.storage.add_message(message=message % (user.name, user.user_id, request.status))
         self.storage.update_user_like_status(user_id=user.user_id, status=True)
         return True
 
-    def remaining_likes(self) -> RemainingLikesDao:
+    def fetch_remaining_likes(self) -> RemainingLikesDao:
         url: str = '%s/v2/profile?include=likes' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
         if request.status == requests.status_codes.codes.unauthorized:
@@ -89,9 +88,10 @@ class MainProcessor:
             photo.url = image_path
         return user
 
-    def process_daily_likes(self, limit: int = 10) -> None:
+    def process_daily_likes(self) -> None:
 
-        profiles_liked = 0
+        remaining_likes_remote: int
+        profiles_liked: int = 0
 
         while True:
             try:
@@ -101,13 +101,19 @@ class MainProcessor:
                 return
 
             for user in results:
+
                 time.sleep(1)  # wait between likes
+                remaining_likes_remote = self.fetch_remaining_likes().likes_remaining  # this will be either 100 or 0
+
+                if remaining_likes_remote == 0:
+                    self.storage.add_message(message='No more likes available')
+                    return
+
                 if self.like_user(user=user):
                     profiles_liked += 1
-
-                if profiles_liked >= limit:
-                    self.storage.add_message(message='Terminating daily likes due to reached limit')
-                    return
+                    self.storage.add_message(message='Remaining likes: %s, local: %s' % (
+                        remaining_likes_remote, (remaining_likes_remote - profiles_liked)))
+                    self.storage.add_update_remaining_likes(remaining_likes=(remaining_likes_remote - profiles_liked))
 
     def collect_profiles(self, limit: int = 100) -> None:
 

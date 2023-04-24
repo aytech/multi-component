@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy_serializer import SerializerMixin
-
 
 class PhotoDao:
     created: str
@@ -48,7 +46,9 @@ class RemainingLikesDao:
 
     def __init__(self, likes_remaining: int, rate_limited_until: int = None):
         self.likes_remaining = likes_remaining
-        if rate_limited_until is not None:
+        if rate_limited_until is None:
+            self.rate_limited_until = datetime.now()
+        else:
             # convert to seconds from millis
             seconds = rate_limited_until // 1000
             self.rate_limited_until = datetime.utcfromtimestamp(seconds)
