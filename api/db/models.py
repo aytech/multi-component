@@ -66,8 +66,8 @@ class Log(Base, SerializerMixin):
 class Settings(Base, SerializerMixin):
     __tablename__ = 'settings'
 
-    base_url_setting = 'base_url'
     api_key_setting = 'api_key'
+    base_url_setting = 'base_url'
     teasers_setting = 'teasers'
 
     created: Mapped[datetime.datetime]

@@ -5,7 +5,7 @@ import { Search } from "../search"
 import { useEffect, useState } from "react"
 import { Page, UsersData } from "../../lib/types"
 import { UrlUtility } from "../../lib/utilities"
-import { useSearchParams } from "react-router-dom"
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 
 interface Props {
   errorMessage: ( message: string ) => void
@@ -16,6 +16,9 @@ export const Profiles = ( {
   errorMessage,
   successMessage
 }: Props ) => {
+
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const [ searchParams ] = useSearchParams()
 
@@ -57,7 +60,10 @@ export const Profiles = ( {
       <Empty description="No profiles found">
         <Button
           type="primary"
-          onClick={ fetchUserData }>
+          onClick={ () => {
+            searchParams.delete( "search" )
+            navigate( `${ location.pathname }?${ searchParams.toString() }` )
+          } }>
           Go back
         </Button>
       </Empty>
