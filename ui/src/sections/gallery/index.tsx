@@ -24,6 +24,7 @@ export const Gallery = ( {
       { userData.users.map( profile => (
         <GalleryItem
           errorMessage={ errorMessage }
+          key={ profile.id }
           profile={ profile }
           refetch={ refetch }
           searchParams={ searchParams }

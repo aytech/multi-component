@@ -19,6 +19,19 @@ body {
   line-height: 0;
 }
 
+.ant-btn.no-pad {
+  padding: 0;
+}
+
+.table {
+  display: table;
+}
+
+.table-cell {
+  display: table-cell;
+  vertical-align: middle;
+}
+
 .text-center {
   text-align: center;
 }

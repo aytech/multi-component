@@ -16,13 +16,18 @@ class PostgresStorage:
     @staticmethod
     def get_user_dict(user: User) -> dict:
         user_dao: UserDao = UserDao(
+            bio=user.bio,
+            birth_date=user.birth_date,
             city=user.city,
+            created=user.get_created(),
             db_id=user.id,
+            distance_mi=user.distance_mi,
             liked=user.liked,
             name=user.name,
             s_number=user.s_number,
             user_id=user.user_id
         )
+        user_dao.age = user.get_age()
         user_dao.photos = [PhotoDao(
             photo_id=photo.photo_id,
             url=photo.url

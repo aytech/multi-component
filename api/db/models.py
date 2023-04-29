@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-from sqlalchemy import String, Boolean, BigInteger, TIMESTAMP, ForeignKey
+from sqlalchemy import String, Boolean, BigInteger, TIMESTAMP, ForeignKey, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from sqlalchemy_serializer import SerializerMixin
 
@@ -33,8 +33,11 @@ class Photo(Base):
 class User(Base):
     __tablename__ = 'user'
 
+    bio: Mapped[str] = mapped_column(Text)
+    birth_date: Mapped[str] = mapped_column(String(100))
     city: Mapped[str] = mapped_column(String(100))
     created: Mapped[datetime.datetime]
+    distance_mi: Mapped[int] = mapped_column(Integer)
     id: Mapped[int] = mapped_column(primary_key=True)
     liked: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String(100))
@@ -50,6 +53,14 @@ class User(Base):
             User(city={self.city!r}, id={self.id!r}, name={self.name!r}, s_number={self.s_number!r},
             'user_id={self.user_id})
         '''
+
+    def get_age(self):
+        birth_date: datetime = datetime.datetime.strptime(self.birth_date, '%d %b, %Y')
+        return int((datetime.datetime.now() - birth_date).days / 365)
+
+    def get_created(self):
+        created: datetime = self.created.strftime('%d %b %H:%M:%S')
+        return created
 
 
 class Log(Base, SerializerMixin):

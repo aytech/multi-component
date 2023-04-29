@@ -1,5 +1,10 @@
 export interface Profile {
-  city?: string
+  age: number
+  bio: string
+  birth_date: string
+  city: string
+  created: string
+  distance: number
   id: number
   liked: boolean
   name: string

@@ -1,8 +1,9 @@
-import { Button, Card, Carousel, Col, Image, Space, message } from "antd"
+import { Button, Card, Carousel, Col, Image, Row, Tooltip } from "antd"
 import { Profile } from "../../../../lib/types"
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
+import "./styles.css"
 
 interface Props {
   errorMessage: ( message: string ) => void
@@ -54,11 +55,19 @@ export const GalleryItem = ( {
     setLikeLoading( false )
   }
 
+  const ShortBio = ( { bio }: { bio: string } ) => bio.length < 15 ? (
+    <span>{ bio }</span>
+  ) : (
+    <Tooltip title={ bio }>
+      <span>{ bio.substring( 0, 15 ) } ...</span>
+    </Tooltip>
+  )
+
   const LikedIcon = ( { liked }: { liked: boolean } ) => {
     return liked ? (
-      <CheckCircleOutlined style={ { fontSize: "24px", color: "green" } } />
+      <CheckCircleOutlined className="liked" />
     ) : (
-      <CloseCircleOutlined style={ { fontSize: "24px", color: "red" } } />
+      <CloseCircleOutlined className="not-liked" />
     )
   }
 
@@ -81,21 +90,40 @@ export const GalleryItem = ( {
             ) ) }
           </Carousel>
         }>
-        <Meta title={ profile.name } description={ (
+        <Meta title={ `${ profile.name } (${ profile.age })` } description={ (
           <>
-            <div className="text-center">
-              <Button
-                icon={ <LikedIcon liked={ profile.liked } /> }
-                onClick={ () => {
-                  searchParams.set( "liked", profile.liked ? "1" : "0" )
-                  navigate( `${ location.pathname }?${ searchParams.toString() }` )
-                } }
-                title={ profile.liked === true ? "Liked" : "Not liked" }
-                type="text" />
-            </div>
-            <br />
-            <div className="text-center">
-              <Space>
+            <Row className="description-row">
+              <Col className="table" xs={ 8 }>
+                <div className="table-cell">Liked:</div>
+              </Col>
+              <Col xs={ 16 }>
+                <Button
+                  className="no-pad"
+                  icon={ <LikedIcon liked={ profile.liked } /> }
+                  onClick={ () => {
+                    searchParams.set( "liked", profile.liked ? "1" : "0" )
+                    navigate( `${ location.pathname }?${ searchParams.toString() }` )
+                  } }
+                  title={ profile.liked === true ? "Liked" : "Not liked" }
+                  type="text" />
+              </Col>
+            </Row>
+            <Row className="description-row">
+              <Col xs={ 8 }>Bio:</Col>
+              <Col xs={ 16 }>
+                <ShortBio bio={ profile.bio } />
+              </Col>
+            </Row>
+            <Row className="description-row">
+              <Col xs={ 8 }>From:</Col>
+              <Col xs={ 16 }>{ profile.city }</Col>
+            </Row>
+            <Row className="description-row">
+              <Col xs={ 8 }>Distance:</Col>
+              <Col xs={ 16 }>{ profile.distance } km</Col>
+            </Row>
+            <Row className="description-row actions">
+              <Col className="left" xs={ 11 }>
                 <Button
                   className="text-center"
                   loading={ likeLoading }
@@ -103,6 +131,8 @@ export const GalleryItem = ( {
                   type="primary">
                   Like
                 </Button>
+              </Col>
+              <Col xs={ 11 } offset={ 1 }>
                 <Button
                   className="text-center"
                   danger
@@ -111,8 +141,8 @@ export const GalleryItem = ( {
                   type="primary">
                   Delete
                 </Button>
-              </Space>
-            </div>
+              </Col>
+            </Row>
           </>
         ) }></Meta>
       </Card>

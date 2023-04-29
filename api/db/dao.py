@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+import decimal
 
 
 class PhotoDao:
@@ -16,8 +16,12 @@ class PhotoDao:
 
 
 class UserDao:
-    city: Optional[str]
+    age: int
+    bio: str
+    birth_date: str
+    city: str
     created: str
+    distance: decimal
     id: int
     liked: bool
     name: str
@@ -25,8 +29,14 @@ class UserDao:
     s_number: int
     user_id: str
 
-    def __init__(self, db_id: int, liked: bool, name: str, s_number: int, user_id: str, city: Optional[str] = None):
+    def __init__(self, bio: str, birth_date: str, city: str, created: str, distance_mi: float, db_id: int, liked: bool,
+                 name: str, s_number: int, user_id: str):
+        self.age = 0
+        self.bio = bio
+        self.birth_date = birth_date
         self.city = city
+        self.created = created
+        self.distance = 0 if distance_mi is None else round(distance_mi * 1.6, 2)
         self.id = db_id
         self.liked = liked
         self.name = name
@@ -35,8 +45,9 @@ class UserDao:
 
     def __str__(self):
         return f'''
-            User(city={self.city!r}, id={self.id}, liked={self.liked!r},, name={self.name!r},
-            photos={[str(photo) for photo in self.photos]} s_number={self.s_number!r}, 'user_id={self.user_id})
+            User(age={self.age}, bio={self.bio}, birth_date={self.birth_date}, city={self.city}, created={self.created}, 
+            distance={self.distance}, id={self.id}, liked={self.liked},, name={self.name},
+            photos={[str(photo) for photo in self.photos]} s_number={self.s_number}, 'user_id={self.user_id})
         '''
 
 
