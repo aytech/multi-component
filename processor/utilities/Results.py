@@ -1,6 +1,7 @@
 from typing import Optional
 
 from db.dao import UserDao, PhotoDao, UserTeaserDao, RemainingLikesDao
+from utilities.DateProcessor import DateProcessor
 from utilities.errors.GenericError import GenericError
 from utilities.errors.TimeoutReceivedError import TimeoutReceivedError
 
@@ -31,10 +32,15 @@ class Results:
             if 'user' not in result:
                 return users
             new_user = UserDao(
+                bio=result['user']['bio'],
+                distance_mi=result['distance_mi'],
                 liked=False,
                 name=result['user']['name'],
                 s_number=result['s_number'],
                 user_id=result['user']['_id'])
+            if 'birth_date' in result['user']:
+                new_user.age = DateProcessor.get_user_age(birth_date=result['user']['birth_date'])
+                new_user.birth_date = DateProcessor.get_user_birth_date(birth_date=result['user']['birth_date'])
             if 'city' in result['user']:
                 new_user.city = result['user']['city']['name']
             if 'photos' in result['user']:

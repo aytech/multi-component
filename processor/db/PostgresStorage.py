@@ -18,12 +18,14 @@ class PostgresStorage:
     @staticmethod
     def get_user_dao(user: User) -> UserDao:
         user_dao: UserDao = UserDao(
-            city=user.city,
+            bio=user.bio,
+            distance_mi=user.distance_mi,
             liked=user.liked,
             name=user.name,
             s_number=user.s_number,
             user_id=user.user_id
         )
+        user_dao.city = user.city
         user_dao.photos = [PhotoDao(
             photo_id=photo.photo_id,
             url=photo.url
@@ -55,8 +57,11 @@ class PostgresStorage:
         creation_date = datetime.datetime.now()
         with self.session as session:
             session.add(User(
+                bio=user.bio,
+                birth_date=user.birth_date,
                 city=user.city,
                 created=creation_date,
+                distance_mi=int(user.distance / 1.6),
                 liked=user.liked,
                 name=user.name,
                 photos=[Photo(
