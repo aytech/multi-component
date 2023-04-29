@@ -18,8 +18,8 @@ export const Search = ( {
 
   const [ searchValue, setSearchValue ] = useState<string>( searchParams.get( "search" ) || "" )
 
-  const onSearch = async ( value: string ) => {
-    if ( value === "" ) {
+  const onSearch = async () => {
+    if ( searchValue === "" ) {
       searchParams.delete( "search" )
     } else {
       searchParams.set( "search", searchValue )

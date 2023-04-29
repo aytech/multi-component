@@ -55,7 +55,9 @@ class User(Base):
         '''
 
     def get_age(self):
-        birth_date: datetime = datetime.datetime.strptime(self.birth_date, '%d %b, %Y')
+        if self.birth_date is None:
+            return 0
+        birth_date: datetime = datetime.datetime.strptime(str(self.birth_date), '%d %b, %Y')
         return int((datetime.datetime.now() - birth_date).days / 365)
 
     def get_created(self):

@@ -55,13 +55,18 @@ export const GalleryItem = ( {
     setLikeLoading( false )
   }
 
-  const ShortBio = ( { bio }: { bio: string } ) => bio.length < 15 ? (
-    <span>{ bio }</span>
-  ) : (
-    <Tooltip title={ bio }>
-      <span>{ bio.substring( 0, 15 ) } ...</span>
-    </Tooltip>
-  )
+  const ShortBio = ( { bio }: { bio: string | null } ) => {
+    if ( bio === null ) {
+      return <span></span>
+    }
+    return bio.length < 15 ? (
+      <span>{ bio }</span>
+    ) : (
+      <Tooltip title={ bio }>
+        <span>{ bio.substring( 0, 15 ) } ...</span>
+      </Tooltip>
+    )
+  }
 
   const LikedIcon = ( { liked }: { liked: boolean } ) => {
     return liked ? (
