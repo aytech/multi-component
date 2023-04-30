@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 
 import certifi as certifi
 import requests as requests
@@ -10,7 +9,8 @@ from flask_restful import Api
 
 from PostgresStorage import PostgresStorage
 from db.dao import RemainingLikesDao
-from db.models import User, Log
+from db.models import User
+from utilities.Logs import Logs
 from utilities.Results import Results
 
 storage_session = PostgresStorage()
@@ -120,20 +120,33 @@ def delete_user(user_id: int):
 
 @app.route('/api/logs', methods=['GET'])
 def get_logs():
-    from_index: Optional[int] = None
-    limit: int = 100
+    return make_response(jsonify({
+        'logs': [log.to_dict() for log in Logs(storage=storage_session).get_logs_chunk()],
+    }), requests.status_codes.codes.ok)
+
+
+@app.route('/api/logs/archive', methods=['GET'])
+def get_archive_logs():
+    logs: list[dict] = []
     try:
-        from_index_arg = request.args.get('from')
-        if from_index_arg is not None:
-            from_index = int(from_index_arg)
-        limit = int(request.args.get('limit', default=100))
+        from_log = request.args.get('from')
+        if from_log is not None:
+            logs = [log.to_dict() for log in Logs(storage=storage_session).get_archive_logs(from_log=int(from_log))]
     except ValueError:
         pass
-    logs: list[Log] = storage_session.get_logs(limit=limit, from_index=from_index)
-    return make_response(jsonify({
-        'logs': [log.to_dict() for log in logs],
-        'last': True if len(logs) == 0 else storage_session.is_last_log(log_id=logs[0].id)
-    }), requests.status_codes.codes.ok)
+    return make_response(jsonify({'logs': logs}), requests.status_codes.codes.ok)
+
+
+@app.route('/api/logs/tail', methods=['GET'])
+def get_tail_logs():
+    logs: list[dict] = []
+    try:
+        to_log = request.args.get('to')
+        if to_log is not None:
+            logs = [log.to_dict() for log in Logs(storage=storage_session).get_latest_logs(to_log=int(to_log))]
+    except ValueError:
+        pass
+    return make_response(jsonify({'logs': logs}), requests.status_codes.codes.ok)
 
 
 @app.route('/api/settings/token/<string:token>', methods=['POST'])

@@ -8,10 +8,13 @@ from sqlalchemy.orm import Session
 
 from db.dao import UserDao, PhotoDao
 from db.models import User, Log, Settings
+from utilities.LogContext import LogContext
+from utilities.LogLevel import LogLevel
 
 
 class PostgresStorage:
     session: Session
+    logs_limit: int = 10
 
     @staticmethod
     def get_user_dict(user: User) -> dict:
@@ -77,12 +80,30 @@ class PostgresStorage:
             session.execute(statement=update(User).where(User.id == user.id).values(liked=user.liked))
             session.commit()
 
-    def get_logs(self, limit: int, from_index: int = None):
+    def log_message(self, message: str, level: LogLevel, context: LogContext):
+        with self.session as session:
+            session.add(Log(
+                context=context,
+                level=level,
+                text=message,
+            ))
+            session.commit()
+
+    def get_logs(self, from_log: int = None, to_log: int = None) -> list[Log]:
+        logs: list[Log] = []
         statement: Select = select(Log)
-        if from_index is not None:
-            statement = statement.where(Log.id <= from_index)
-        statement = statement.order_by(Log.id.desc()).limit(limit=limit)
-        return self.session.scalars(statement=statement).all()
+        # Fetching historical log
+        if from_log is not None:
+            statement = statement.where(Log.id < from_log)
+        # Fetching live tail
+        if from_log is None and to_log is not None:
+            statement = statement.where(Log.id > to_log)
+        # Standard ordering
+        statement = statement.order_by(Log.created.desc()).limit(limit=self.logs_limit)
+        self.log_message(message='Statement: %s' % statement, level=LogLevel.TRACE, context=LogContext.SQL)
+        for log in self.session.scalars(statement=statement).all():
+            logs.append(log)
+        return logs
 
     def is_last_log(self, log_id: int) -> bool:
         return self.session.query(Log.id).order_by(Log.id.desc()).limit(1).scalar() <= log_id

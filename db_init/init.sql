@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS public.settings (
 );
 
 CREATE TABLE IF NOT EXISTS public.log (
-    created TIMESTAMP,
+    context VARCHAR(20),
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id serial PRIMARY KEY,
+    level VARCHAR(10),
     text TEXT
 );

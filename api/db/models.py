@@ -68,8 +68,10 @@ class User(Base):
 class Log(Base, SerializerMixin):
     __tablename__ = 'log'
 
+    context: Mapped[str] = mapped_column(String(20))
     created: Mapped[datetime.datetime]
     id: Mapped[int] = mapped_column(primary_key=True)
+    level: Mapped[str] = mapped_column(String(10))
     text: Mapped[str] = mapped_column()
 
     def __repr__(self):
