@@ -2,6 +2,8 @@ import { Button, Divider, List } from "antd"
 import { useEffect, useState } from "react"
 import { UrlUtility } from "../../lib/utilities"
 import { Log, LogsData } from "../../lib/types"
+import { Search } from "../search"
+import { useSearchParams } from "react-router-dom"
 
 interface Props {
   errorMessage: ( message: string ) => void
@@ -13,12 +15,18 @@ export const Logs = ( {
   successMessage
 }: Props ) => {
 
+  const [ searchParams ] = useSearchParams()
+
   const [ loading, setLoading ] = useState<boolean>( false )
   const [ logs, setLogs ] = useState<Array<Log>>( [] )
 
   const fetchLogs = async () => {
     setLoading( true )
-    const response = await fetch( UrlUtility.getLogsUrl() )
+    const searchCriteria: string | null = searchParams.get( "search" )
+    const requestUrl: string = searchCriteria !== null && searchCriteria !== ""
+      ? UrlUtility.getSearchLogsUrl( searchCriteria )
+      : UrlUtility.getLogsUrl()
+    const response = await fetch( requestUrl )
     const logsData: LogsData = await response.json();
     setLogs( logsData.logs )
     setLoading( false )
@@ -60,11 +68,12 @@ export const Logs = ( {
 
   useEffect( () => {
     fetchLogs()
-  }, [] )
+  }, [ searchParams ] )
 
   return (
     <>
       <Divider orientation="left">Processor logs</Divider>
+      <Search paginationEnabled={ false } searchParams={ searchParams } />
       <List
         size="large"
         bordered

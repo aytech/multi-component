@@ -14,7 +14,7 @@ from utilities.LogLevel import LogLevel
 
 class PostgresStorage:
     session: Session
-    logs_limit: int = 10
+    logs_limit: int = 100
 
     @staticmethod
     def get_user_dict(user: User) -> dict:
@@ -91,7 +91,6 @@ class PostgresStorage:
             session.commit()
 
     def get_logs(self, from_log: int = None, to_log: int = None) -> list[Log]:
-        logs: list[Log] = []
         statement: Select = select(Log)
         # Fetching historical log
         if from_log is not None:
@@ -101,9 +100,11 @@ class PostgresStorage:
             statement = statement.where(Log.id > to_log)
         # Standard ordering
         statement = statement.order_by(Log.created.desc()).limit(limit=self.logs_limit)
-        for log in self.session.scalars(statement=statement).all():
-            logs.append(log)
-        return logs
+        return [log for log in self.session.scalars(statement=statement).all()]
+
+    def search_logs(self, criteria: str) -> list[Log]:
+        statement: Select = select(Log).where(Log.text.like('%{}%'.format(criteria))).order_by(Log.created.desc())
+        return [log for log in self.session.scalars(statement=statement).all()]
 
     def is_last_log(self, log_id: int) -> bool:
         return self.session.query(Log.id).order_by(Log.id.desc()).limit(1).scalar() <= log_id

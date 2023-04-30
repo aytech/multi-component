@@ -21,6 +21,9 @@ export const UrlUtility = {
   getArchiveLogsUrl: ( from: number ) => {
     return `${ UrlUtility.getLogsUrl() }/archive?from=${ from }`
   },
+  getSearchLogsUrl: ( searchCriteria: string ) => {
+    return `${ UrlUtility.getLogsUrl() }/search?search=${ searchCriteria }`
+  },
   getTailLogsUrl: ( to: number ) => {
     return `${ UrlUtility.getLogsUrl() }/tail?to=${ to }`
   },

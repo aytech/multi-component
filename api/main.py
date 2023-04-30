@@ -149,6 +149,19 @@ def get_tail_logs():
     return make_response(jsonify({'logs': logs}), requests.status_codes.codes.ok)
 
 
+@app.route('/api/logs/search', methods=['GET'])
+def search_logs():
+    try:
+        criteria = request.args.get('search')
+        if criteria is not None:
+            return make_response(jsonify({
+                'logs': [log.to_dict() for log in Logs(storage=storage_session).search_logs(criteria=criteria)]
+            }), requests.status_codes.codes.ok)
+    except ValueError:
+        pass
+    return make_response(jsonify({'logs': []}), requests.status_codes.codes.ok)
+
+
 @app.route('/api/settings/token/<string:token>', methods=['POST'])
 def add_or_update_token(token: str):
     storage_session.add_update_api_key(key_value=token)

@@ -18,5 +18,8 @@ class Logs:
     def get_logs_chunk(self):
         return self.storage.get_logs()
 
+    def search_logs(self, criteria: str):
+        return self.storage.search_logs(criteria=criteria)
+
     def __init__(self, storage: PostgresStorage):
         self.storage = storage

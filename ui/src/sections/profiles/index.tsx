@@ -45,7 +45,7 @@ export const Profiles = ( {
 
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
     <>
-      <Search searchParams={ searchParams } />
+      <Search paginationEnabled={ true } searchParams={ searchParams } />
       <Gallery
         errorMessage={ errorMessage }
         refetch={ fetchUserData }
@@ -56,7 +56,7 @@ export const Profiles = ( {
     </>
   ) : (
     <>
-      <Search searchParams={ searchParams } />
+      <Search paginationEnabled={ true } searchParams={ searchParams } />
       <Empty description="No profiles found">
         <Button
           type="primary"
