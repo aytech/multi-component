@@ -104,13 +104,11 @@ class MainProcessor:
                 remaining_likes_remote = self.fetch_remaining_likes().likes_remaining  # this will be either 100 or 0
 
                 if remaining_likes_remote == 0:
-                    self.storage.add_message(message='No more likes available')
+                    self.storage.add_message(message='No more likes available, liked %s profiles' % profiles_liked)
                     return
 
                 if self.like_user(user=user):
                     profiles_liked += 1
-                    self.storage.add_message(message='Remaining likes: %s, local: %s' % (
-                        remaining_likes_remote, (remaining_likes_remote - profiles_liked)))
                     self.storage.add_update_remaining_likes(remaining_likes=(remaining_likes_remote - profiles_liked))
 
     def collect_profiles(self, limit: int = 100) -> None:
