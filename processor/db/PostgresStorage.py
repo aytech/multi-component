@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from db.dao import UserDao, PhotoDao
 from db.models import User, Log, Photo, Settings
-from utilities.DateProcessor import DateProcessor
+from utilities.LogContext import LogContext
+from utilities.LogLevel import LogLevel
 
 
 class PostgresStorage:
@@ -74,15 +75,15 @@ class PostgresStorage:
             ))
             session.commit()
 
-    def add_message(self, message: str, persist: bool = True):
-        print('[DEBUG][%s]: %s' % (DateProcessor.get_current_date(), message,))
-        if persist:
-            with self.session as session:
-                session.add(Log(
-                    created=datetime.datetime.now(),
-                    text=message
-                ))
-                session.commit()
+    def add_message(self, message: str, level: LogLevel = LogLevel.DEBUG):
+        with self.session as session:
+            session.add(Log(
+                context=LogContext.PROCESSOR,
+                created=datetime.datetime.now(),
+                level=level,
+                text=message,
+            ))
+            session.commit()
 
     def get_api_key(self) -> Optional[str]:
         statement: Select = select(Settings).where(Settings.name == Settings.api_key_setting)

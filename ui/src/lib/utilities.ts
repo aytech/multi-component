@@ -15,24 +15,26 @@ export const UrlUtility = {
     }
     return url
   },
-  getLogsUrl: ( chunk_size: number, from: number | null ) => {
-    let url: string = `/api/logs?limit=${ chunk_size }`
-    if ( from !== null ) {
-      url += `&from=${ from }`
-    }
-    return url
+  getLogsUrl: () => {
+    return "/api/logs"
+  },
+  getArchiveLogsUrl: ( from: number ) => {
+    return `${ UrlUtility.getLogsUrl() }/archive?from=${ from }`
+  },
+  getTailLogsUrl: ( to: number ) => {
+    return `${ UrlUtility.getLogsUrl() }/tail?to=${ to }`
   },
   getSettingsUrl: () => {
     return "/api/settings"
   },
   getSettingsLikesUrl: () => {
-    return "/api/settings/likes"
+    return `${ UrlUtility.getSettingsUrl() }/likes`
   },
   getSettingsUpdateApiKeyUrl: ( keyValue: string ) => {
-    return `/api/settings/token/${ keyValue }`
+    return `${ UrlUtility.getSettingsUrl() }/token/${ keyValue }`
   },
   getSettingsBaseUrl: ( urlValue: string ) => {
-    return `/api/settings/url/${ urlValue }`
+    return `${ UrlUtility.getSettingsUrl() }/url/${ urlValue }`
   },
   getSearchParameters: ( parameters: URLSearchParams, defaultPage: number, defaultSize: number ): Page => {
     const searchParameters: Page = { page: defaultPage, size: defaultSize }

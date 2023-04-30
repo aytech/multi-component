@@ -37,7 +37,6 @@ export interface Log {
 }
 
 export interface LogsData {
-  last: boolean
   logs: Array<Log>
 }
 

@@ -24,7 +24,6 @@ class MainProcessor:
     storage: PostgresStorage
 
     def get_batch_profile_data(self) -> list[UserDao]:
-        self.storage.add_message('Retrieving batch profile data...')
         time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
         url: str = '%s/v2/recs/core' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
@@ -33,7 +32,6 @@ class MainProcessor:
         return Results.user_list(json_data=json.loads(request.data.decode('utf-8')))
 
     def get_teaser_profile(self) -> Optional[UserTeaserDao]:
-        self.storage.add_message('Retrieving teaser user profile')
         url: str = '%s/v2/fast-match/teaser?type=recently-active' % self.base_url
         request = self.pool_manager.request(method='GET', url=url, headers=self.request_headers)
         if request.status == requests.status_codes.codes.unauthorized:
@@ -44,7 +42,7 @@ class MainProcessor:
         request = self.pool_manager.request(method='GET', url='%s/pass/%s' % (self.base_url, user.user_id),
                                             headers=self.request_headers, fields={'s_number': user.s_number})
         message = 'User %s (%s) is passed with status code %s'
-        self.storage.add_message(message=message % (user.name, user.user_id, request.status), persist=True)
+        self.storage.add_message(message=message % (user.name, user.user_id, request.status))
 
     def like_user(self, user: UserDao) -> bool:
         user_local: Optional[UserDao] = self.storage.get_user_by_user_id(user_id=user.user_id)
@@ -97,7 +95,7 @@ class MainProcessor:
             try:
                 results: list[UserDao] = self.get_batch_profile_data()
             except BaseError as e:
-                self.storage.add_message(message=e.message, persist=True)
+                self.storage.add_message(message=e.message)
                 return
 
             for user in results:
@@ -124,7 +122,7 @@ class MainProcessor:
             try:
                 profiles_batch: list[UserDao] = self.get_batch_profile_data()
             except BaseError as e:
-                self.storage.add_message(message=e.message, persist=True)
+                self.storage.add_message(message=e.message)
                 return
 
             batch_size = len(profiles_batch)
@@ -138,19 +136,19 @@ class MainProcessor:
                     self.storage.add_user(user=user)
                     # profiles_added += 1
                     message: str = 'User %s (%s) added to the system'
-                    self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
+                    self.storage.add_message(message=message % (user.name, user.user_id))
                     new_profiles += 1
                 else:
                     self.storage.renew_user(user_dao=user)
                     message: str = 'User %s (%s) was renewed'
-                    self.storage.add_message(message=message % (user.name, user.user_id), persist=True)
+                    self.storage.add_message(message=message % (user.name, user.user_id))
 
                 if index == batch_size - 1:  # Pass at least one user in a batch
                     self.pass_user(user=user)
 
                 if profiles_collected >= limit:
                     message: str = 'Terminating collecting profiles, as limit of %s reached, added %s new users'
-                    self.storage.add_message(message=message % (limit, new_profiles), persist=True)
+                    self.storage.add_message(message=message % (limit, new_profiles))
                     return
 
     def collect_teaser(self):

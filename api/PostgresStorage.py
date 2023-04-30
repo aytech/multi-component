@@ -84,6 +84,7 @@ class PostgresStorage:
         with self.session as session:
             session.add(Log(
                 context=context,
+                created=datetime.datetime.now(),
                 level=level,
                 text=message,
             ))
@@ -100,7 +101,6 @@ class PostgresStorage:
             statement = statement.where(Log.id > to_log)
         # Standard ordering
         statement = statement.order_by(Log.created.desc()).limit(limit=self.logs_limit)
-        self.log_message(message='Statement: %s' % statement, level=LogLevel.TRACE, context=LogContext.SQL)
         for log in self.session.scalars(statement=statement).all():
             logs.append(log)
         return logs
