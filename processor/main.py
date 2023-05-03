@@ -9,7 +9,7 @@ if __name__ == '__main__':
     processor = MainProcessor(storage=storage_session)
 
     while True:
-        processor.process_daily_likes()
+        # processor.process_daily_likes()
         processor.collect_teaser()
         processor.collect_profiles()
 

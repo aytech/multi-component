@@ -31,26 +31,34 @@ export const GalleryItem = ( {
 
   const deleteProfile = async ( profileId: number ) => {
     setDeleteLoading( true )
-    const request = await fetch( `/api/users/${ profileId }`, { method: "DELETE" } )
-    const response = await request.json()
-    if ( request.status === 200 ) {
-      successMessage( response.message )
-      refetch()
-    } else {
-      errorMessage( response.message )
+    try {
+      const request = await fetch( `/api/users/${ profileId }`, { method: "DELETE" } )
+      const response = await request.json()
+      if ( request.status === 200 ) {
+        successMessage( response.message )
+        refetch()
+      } else {
+        errorMessage( response.message )
+      }
+    } catch ( error: any ) {
+      errorMessage( error.message )
     }
     setDeleteLoading( false )
   }
 
   const likeProfile = async ( profileId: number ) => {
     setLikeLoading( true )
-    const request = await fetch( `/api/users/like/${ profileId }`, { method: "POST" } )
-    const response = await request.json()
-    if ( request.status === 200 ) {
-      successMessage( "Profile was liked" )
-      refetch()
-    } else {
-      errorMessage( response.message )
+    try {
+      const request = await fetch( `/api/users/like/${ profileId }`, { method: "POST" } )
+      const response = await request.json()
+      if ( request.status === 200 ) {
+        successMessage( "Profile was liked" )
+        refetch()
+      } else {
+        errorMessage( response.message )
+      }
+    } catch ( error: any ) {
+      errorMessage( error.message )
     }
     setLikeLoading( false )
   }

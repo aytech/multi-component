@@ -12,6 +12,7 @@ import urllib3
 
 from db.PostgresStorage import PostgresStorage
 from db.dao import UserDao, UserTeaserDao, RemainingLikesDao
+from utilities.LogLevel import LogLevel
 from utilities.Results import Results
 from utilities.errors.AuthorizationError import AuthorizationError
 from utilities.errors.BaseError import BaseError
@@ -141,8 +142,8 @@ class MainProcessor:
                     message: str = 'User %s (%s) was renewed'
                     self.storage.add_message(message=message % (user.name, user.user_id))
 
-                if index == batch_size - 1:  # Pass at least one user in a batch
-                    self.pass_user(user=user)
+                # if index == batch_size - 1:  # Pass at least one user in a batch
+                #     self.pass_user(user=user)
 
                 if profiles_collected >= limit:
                     message: str = 'Terminating collecting profiles, as limit of %s reached, added %s new users'
@@ -150,7 +151,11 @@ class MainProcessor:
                     return
 
     def collect_teaser(self):
-        teaser: Optional[UserTeaserDao] = self.get_teaser_profile()
+        teaser: Optional[UserTeaserDao] = None
+        try:
+            teaser = self.get_teaser_profile()
+        except AuthorizationError:
+            self.storage.add_message("Authorization error while fetching teaser profile", LogLevel.WARN)
         if teaser is not None:
             self.storage.add_teaser(teaser=teaser.name)
 

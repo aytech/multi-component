@@ -10,6 +10,7 @@ from flask_restful import Api
 from PostgresStorage import PostgresStorage
 from db.dao import RemainingLikesDao
 from db.models import User
+from errors.AuthorizationError import AuthorizationError
 from utilities.Logs import Logs
 from utilities.Results import Results
 
@@ -37,6 +38,8 @@ def make_api_call_request(url: str, method: str):
 def get_remaining_likes() -> int:
     url: str = 'https://%s/v2/profile?include=likes' % storage_session.get_base_url()
     like_request = make_api_call_request(url=url, method='GET')
+    if like_request.status == requests.status_codes.codes.unauthorized:
+        raise AuthorizationError(message='while trying to retrieve remaining likes')
     data = json.loads(like_request.data.decode('utf-8'))
     if 'data' in data:
         return data['data']['likes']['likes_remaining']
@@ -79,10 +82,15 @@ def search_users(name: str):
 
 @app.route('/api/users/like/<int:user_id>', methods=['POST'])
 def like_user(user_id: int):
-    if get_remaining_likes() < 1:
+    try:
+        if get_remaining_likes() < 1:
+            return make_response(jsonify({
+                'message': 'No more likes available',
+            }), requests.status_codes.codes.bad_request)
+    except AuthorizationError as e:
         return make_response(jsonify({
-            'message': 'No more likes available',
-        }), requests.status_codes.codes.bad_request)
+            'message': e.message,
+        }), requests.status_codes.codes.unauthorized)
     user: User = storage_session.fetch_user_by_id(user_id=user_id)
     if user is None:
         return make_response(jsonify({
