@@ -50,7 +50,7 @@ class MainProcessor:
 
         if user_local is not None and user_local.liked is True:
             self.storage.add_message(message='User %s (%s) is already liked, renewing...' % (user.name, user.user_id))
-            self.storage.renew_user(user_dao=user_local)
+            self.storage.renew_user_image_urls(user_dao=user_local)
             return False
 
         if user_local is None:
@@ -133,17 +133,13 @@ class MainProcessor:
 
                 if self.storage.get_user(user_id=user.user_id) is None:
                     self.storage.add_user(user=user)
-                    # profiles_added += 1
                     message: str = 'User %s (%s) added to the system'
                     self.storage.add_message(message=message % (user.name, user.user_id))
                     new_profiles += 1
                 else:
-                    self.storage.renew_user(user_dao=user)
+                    self.storage.renew_user_image_urls(user_dao=user)
                     message: str = 'User %s (%s) was renewed'
                     self.storage.add_message(message=message % (user.name, user.user_id))
-
-                # if index == batch_size - 1:  # Pass at least one user in a batch
-                #     self.pass_user(user=user)
 
                 if profiles_collected >= limit:
                     message: str = 'Terminating collecting profiles, as limit of %s reached, added %s new users'

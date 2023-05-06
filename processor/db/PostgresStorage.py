@@ -76,6 +76,8 @@ class PostgresStorage:
             session.commit()
 
     def add_message(self, message: str, level: LogLevel = LogLevel.DEBUG):
+        if level == LogLevel.DEBUG:
+            print('[DEBUG]: %s' % message)
         with self.session as session:
             session.add(Log(
                 context=LogContext.PROCESSOR,
@@ -123,12 +125,14 @@ class PostgresStorage:
                         value=remaining_likes))
                 session.commit()
 
-    def renew_user(self, user_dao: UserDao):
-        user: User = self.session.scalars(statement=select(User).where(User.user_id == user_dao.user_id)).one()
-        with self.session as session:
-            session.delete(user)
-            session.commit()
-        self.add_user(user=user_dao)
+    def renew_user_image_urls(self, user_dao: UserDao):
+        user: User = self.session.scalar(statement=select(User).where(User.user_id == user_dao.user_id))
+        if user is not None:
+            user_id: int = user.id
+            for photo in user_dao.photos:
+                with self.session as session:
+                    session.execute(statement=update(Photo).where(Photo.user_id == user_id).values(url=photo.url))
+                    session.commit()
 
     def add_teaser(self, teaser: str):
         statement: Select = select(Settings).where(Settings.name == Settings.teasers_setting)
