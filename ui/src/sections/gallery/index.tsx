@@ -27,6 +27,7 @@ export const Gallery = ( {
           key={ profile.id }
           profile={ profile }
           refetch={ refetch }
+          scheduled={userData.scheduled.indexOf(profile.id) !== -1}
           searchParams={ searchParams }
           successMessage={ successMessage } />
       ) ) }

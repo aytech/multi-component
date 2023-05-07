@@ -51,6 +51,16 @@ class UserDao:
         '''
 
 
+class ScheduledDao:
+    id: int
+
+    def __init__(self, db_id: int):
+        self.id = db_id
+
+    def __str__(self):
+        return f'Scheduled(user={self.id})'
+
+
 class RemainingLikesDao:
     likes_remaining: int
     rate_limited_until: datetime

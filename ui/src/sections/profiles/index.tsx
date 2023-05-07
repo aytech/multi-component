@@ -27,7 +27,6 @@ export const Profiles = ( {
   const [ currentPage, setCurrentPage ] = useState<Page>( { page: 1, size: 10 } )
 
   const fetchUserData = async () => {
-    setLoading( true )
     const parameters: Page = UrlUtility.getSearchParameters( searchParams, currentPage.page, currentPage.size )
     setCurrentPage( parameters )
     const requestUrl = parameters.search !== undefined

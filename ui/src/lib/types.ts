@@ -19,7 +19,8 @@ export interface Photo {
 }
 
 export interface UsersData {
-  total: number,
+  scheduled: Array<number>
+  total: number
   users: Array<Profile>
 }
 
@@ -31,8 +32,8 @@ export interface Page {
 }
 
 export interface Log {
-  created: string,
-  id: number,
+  created: string
+  id: number
   text: string
 }
 

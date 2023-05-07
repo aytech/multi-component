@@ -14,6 +14,13 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
       - ./db_init:/docker-entrypoint-initdb.d
+  pg-admin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=postgres
+    ports:
+      - "8888:80"
   api:
     container_name: api
     image: ole-ya/api

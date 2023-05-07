@@ -23,6 +23,16 @@ body {
   padding: 0;
 }
 
+.ant-btn-primary.btn-green,
+.ant-btn-primary.btn-green:active,
+.ant-btn-primary.btn-green:hover {
+  background-color: #00b300;
+}
+
+.ant-btn-primary.btn-green:focus-visible {
+  outline: 4px solid #00e600;
+}
+
 .table {
   display: table;
 }
@@ -34,4 +44,8 @@ body {
 
 .text-center {
   text-align: center;
+}
+
+.text-right {
+  text-align: end;
 }

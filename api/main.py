@@ -8,7 +8,7 @@ from flask_restful import Api
 
 from PostgresStorage import PostgresStorage
 from db.dao import RemainingLikesDao
-from db.models import User
+from db.models import User, ScheduledLike
 from routes import app_routes
 from utilities.Logs import Logs
 from utilities.Request import Request
@@ -33,8 +33,9 @@ def get_users():
     except ValueError:
         pass
     return make_response(jsonify({
-        'users': storage_session.list_users(page=page, page_size=page_size, liked=liked),
-        'total': storage_session.fetch_all_users_count()
+        'scheduled': storage_session.fetch_scheduled(),
+        'total': storage_session.fetch_all_users_count(),
+        'users': storage_session.list_users(page=page, page_size=page_size, liked=liked)
     }))
 
 
@@ -61,16 +62,18 @@ def like_user(user_id: int):
     status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
     return make_response(jsonify({
         'scheduled': result is not None,
-        'message': 'User scheduled for like' if result is not None else 'User not found or already scheduled'
+        'message': 'User scheduled for like' if result is not None else 'User already scheduled'
     }), status)
 
 
-@app.route(app_routes['DELETE_USER'], methods=['DELETE'])
-def delete_user(user_id: int):
-    deleted_user: User = storage_session.delete_user_by_id(user_id=user_id)
+@app.route(app_routes['DISLIKE_USER'], methods=['POST'])
+def dislike_user(user_id: int):
+    result: Optional[ScheduledLike] = storage_session.unschedule_like(user_id=user_id)
+    status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
     return make_response(jsonify({
-        'message': 'User %s deleted' % deleted_user.name
-    }), requests.status_codes.codes.ok)
+        'unscheduled': result is not None,
+        'message': 'User unscheduled' if result is not None else 'User already unscheduled'
+    }), status)
 
 
 @app.route(app_routes['HIDE_USER'], methods=['POST'])

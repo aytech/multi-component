@@ -1,5 +1,5 @@
 app_routes: dict = {
-    'DELETE_USER': '/api/users/<int:user_id>',
+    'DISLIKE_USER': '/api/users/<int:user_id>/dislike',
     'GET_ARCHIVE_LOGS': '/api/logs/archive',
     'GET_LOGS': '/api/logs',
     'GET_TAIL_LOGS': '/api/logs/tail',

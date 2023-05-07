@@ -16,10 +16,6 @@
   margin-top: 20px;
 }
 
-.ant-row.description-row.actions button {
-  width: 80px;
-}
-
 .ant-row.description-row.actions>.ant-col.left {
   text-align: end;
 }

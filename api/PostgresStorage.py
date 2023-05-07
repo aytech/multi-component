@@ -43,7 +43,9 @@ class PostgresStorage:
         if liked is not None:
             statement = statement.where(User.liked == liked)
         # paginate
-        statement = statement.order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
+        statement = statement.where(User.visible).order_by(User.created.desc()).offset(
+            (page - 1) * page_size).limit(page_size)
+        self.log_message(message=str(statement), context=LogContext.SQL)
         for user in self.session.scalars(statement=statement).all():
             users.append(self.get_user_dict(user=user))
         return users
@@ -62,33 +64,32 @@ class PostgresStorage:
     def fetch_all_users_count(self):
         return self.session.query(func.count(User.id)).scalar()
 
+    def fetch_scheduled(self) -> list[int]:
+        return [like.user_id for like in self.session.scalars(statement=select(ScheduledLike)).all()]
+
     def fetch_filtered_users_count(self, name_partial: str):
         return self.session.query(func.count(User.id)).where(User.name.like('%{}%'.format(name_partial))).scalar()
 
     def fetch_user_by_id(self, user_id: int) -> User:
         return self.session.scalars(statement=select(User).where(User.id == user_id)).one()
 
-    def delete_user_by_id(self, user_id: int) -> User:
-        user: User = self.fetch_user_by_id(user_id=user_id)
-        with self.session as session:
-            session.delete(self.fetch_user_by_id(user_id=user_id))
-            session.commit()
-        return user
-
     def update_user(self, user: User):
         with self.session as session:
             session.execute(statement=update(User).where(User.id == user.id).values(liked=user.liked))
             session.commit()
 
-    def log_message(self, message: str, level: LogLevel, context: LogContext):
-        with self.session as session:
-            session.add(Log(
-                context=context,
-                created=datetime.datetime.now(),
-                level=level,
-                text=message,
-            ))
-            session.commit()
+    def log_message(self, message: str, context: LogContext, level: LogLevel = LogLevel.DEBUG):
+        if level == LogLevel.DEBUG:
+            print('[DEBUG]: %s' % message)
+        else:
+            with self.session as session:
+                session.add(Log(
+                    context=context,
+                    created=datetime.datetime.now(),
+                    level=level,
+                    text=message,
+                ))
+                session.commit()
 
     def get_logs(self, from_log: int = None, to_log: int = None) -> list[Log]:
         statement: Select = select(Log)
@@ -172,6 +173,17 @@ class PostgresStorage:
                 ))
                 session.commit()
                 return user
+        return None
+
+    def unschedule_like(self, user_id: int) -> Optional[ScheduledLike]:
+        with self.session as session:
+            user: User = session.scalar(statement=select(User).where(User.id == user_id))
+            scheduled: ScheduledLike = session.scalar(
+                statement=select(ScheduledLike).where(ScheduledLike.user_id == user_id))
+            if user is not None and scheduled is not None:
+                session.delete(scheduled)
+                session.commit()
+                return scheduled
         return None
 
     def __init__(self):

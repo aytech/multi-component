@@ -1,14 +1,17 @@
-import { Button, Card, Carousel, Col, Image, Row, Tooltip } from "antd"
+import { Card, Carousel, Col, Image, Row, Tooltip } from "antd"
 import { Profile } from "../../../../lib/types"
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
 import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import "./styles.css"
+import { LikedButton } from "../likedButton"
+import { ScheduledButton } from "../scheduledButton"
+import { Actions } from "../actions"
 
 interface Props {
   errorMessage: ( message: string ) => void
   profile: Profile
   refetch: () => void
+  scheduled: boolean
   searchParams: URLSearchParams
   successMessage: ( message: string ) => void
 }
@@ -16,6 +19,7 @@ export const GalleryItem = ( {
   errorMessage,
   profile,
   refetch,
+  scheduled,
   searchParams,
   successMessage
 }: Props ) => {
@@ -26,13 +30,13 @@ export const GalleryItem = ( {
   const navigate = useNavigate()
 
 
-  const [ deleteLoading, setDeleteLoading ] = useState<boolean>( false )
+  const [ dislikeLoading, setDislikeLoading ] = useState<boolean>( false )
+  const [ hideLoading, setHideLoading ] = useState<boolean>( false )
   const [ likeLoading, setLikeLoading ] = useState<boolean>( false )
 
-  const deleteProfile = async ( profileId: number ) => {
-    setDeleteLoading( true )
+  const makeRequest = async ( url: string, callback: () => void ) => {
     try {
-      const request = await fetch( `/api/users/${ profileId }`, { method: "DELETE" } )
+      const request = await fetch( url, { method: "POST" } )
       const response = await request.json()
       if ( request.status === 200 ) {
         successMessage( response.message )
@@ -43,24 +47,28 @@ export const GalleryItem = ( {
     } catch ( error: any ) {
       errorMessage( error.message )
     }
-    setDeleteLoading( false )
+    callback()
   }
 
   const likeProfile = async ( profileId: number ) => {
     setLikeLoading( true )
-    try {
-      const request = await fetch( `/api/users/like/${ profileId }`, { method: "POST" } )
-      const response = await request.json()
-      if ( request.status === 200 ) {
-        successMessage( "Profile was liked" )
-        refetch()
-      } else {
-        errorMessage( response.message )
-      }
-    } catch ( error: any ) {
-      errorMessage( error.message )
-    }
-    setLikeLoading( false )
+    makeRequest( `/api/users/${ profileId }/like`, () => {
+      setLikeLoading( false )
+    } )
+  }
+
+  const dislikeProfile = async ( profileId: number ) => {
+    setDislikeLoading( true )
+    makeRequest( `/api/users/${ profileId }/dislike`, () => {
+      setDislikeLoading( false )
+    } )
+  }
+
+  const hideProfile = async ( profileId: number ) => {
+    setHideLoading( true )
+    makeRequest( `/api/users/${ profileId }/hide`, () => {
+      setHideLoading( false )
+    } )
   }
 
   const ShortBio = ( { bio }: { bio: string | null } ) => {
@@ -73,14 +81,6 @@ export const GalleryItem = ( {
       <Tooltip title={ bio }>
         <span>{ bio.substring( 0, 15 ) } ...</span>
       </Tooltip>
-    )
-  }
-
-  const LikedIcon = ( { liked }: { liked: boolean } ) => {
-    return liked ? (
-      <CheckCircleOutlined className="liked" />
-    ) : (
-      <CloseCircleOutlined className="not-liked" />
     )
   }
 
@@ -106,19 +106,17 @@ export const GalleryItem = ( {
         <Meta title={ `${ profile.name } (${ profile.age })` } description={ (
           <>
             <Row className="description-row">
-              <Col className="table" xs={ 8 }>
-                <div className="table-cell">Liked:</div>
+              <Col className="table text-right" xs={ 12 }>
+                <ScheduledButton onClick={ () => {
+                  searchParams.set( "scheduled", scheduled ? "1" : "0" )
+                  navigate( `${ location.pathname }?${ searchParams.toString() }` )
+                } } scheduled={ scheduled } />
               </Col>
-              <Col xs={ 16 }>
-                <Button
-                  className="no-pad"
-                  icon={ <LikedIcon liked={ profile.liked } /> }
-                  onClick={ () => {
-                    searchParams.set( "liked", profile.liked ? "1" : "0" )
-                    navigate( `${ location.pathname }?${ searchParams.toString() }` )
-                  } }
-                  title={ profile.liked === true ? "Liked" : "Not liked" }
-                  type="text" />
+              <Col xs={ 12 }>
+                <LikedButton liked={ profile.liked } onClick={ () => {
+                  searchParams.set( "liked", profile.liked ? "1" : "0" )
+                  navigate( `${ location.pathname }?${ searchParams.toString() }` )
+                } } />
               </Col>
             </Row>
             <Row className="description-row">
@@ -136,25 +134,19 @@ export const GalleryItem = ( {
               <Col xs={ 16 }>{ profile.distance } km</Col>
             </Row>
             <Row className="description-row actions">
-              <Col className="left" xs={ 11 }>
-                <Button
-                  className="text-center"
-                  loading={ likeLoading }
-                  onClick={ () => likeProfile( profile.id ) }
-                  type="primary">
-                  Like
-                </Button>
-              </Col>
-              <Col xs={ 11 } offset={ 1 }>
-                <Button
-                  className="text-center"
-                  danger
-                  loading={ deleteLoading }
-                  onClick={ () => deleteProfile( profile.id ) }
-                  type="primary">
-                  Delete
-                </Button>
-              </Col>
+              <Actions
+                dislike={ () => {
+                  dislikeProfile( profile.id )
+                } }
+                disliking={ dislikeLoading }
+                hide={ () => {
+                  hideProfile( profile.id )
+                } }
+                hiding={ hideLoading }
+                like={ () => {
+                  likeProfile( profile.id )
+                } }
+                liking={ likeLoading } />
             </Row>
           </>
         ) }></Meta>
