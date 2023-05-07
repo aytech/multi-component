@@ -54,6 +54,15 @@ class UserDao:
         return dao_str.replace('\n', '').strip()
 
 
+class ScheduledLikeDao:
+    id: int
+    user: UserDao
+
+    def __init__(self, db_id: int, user: UserDao):
+        self.id = db_id
+        self.user = user
+
+
 class UserTeaserDao:
     name: str
 
@@ -71,3 +80,14 @@ class RemainingLikesDao:
             # convert to seconds from millis
             seconds = rate_limited_until // 1000
             self.rate_limited_until = datetime.datetime.utcfromtimestamp(seconds)
+
+
+class LikesResponseDao:
+    likes_remaining: int
+    match: bool
+    status: int
+
+    def __init__(self, likes_remaining: int = 0, match: bool = False, status: int = None):
+        self.likes_remaining = likes_remaining
+        self.match = match
+        self.status = status

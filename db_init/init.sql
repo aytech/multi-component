@@ -8,7 +8,15 @@ CREATE TABLE IF NOT EXISTS public.user (
     liked BOOLEAN DEFAULT FALSE,
     name VARCHAR(100),
     s_number BIGINT,
-    user_id VARCHAR(100) NOT NULL
+    user_id VARCHAR(100) NOT NULL,
+    visible BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS public.scheduled_like (
+    id serial PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id)
+        REFERENCES public.user(id)
 );
 
 CREATE TABLE IF NOT EXISTS public.photo (

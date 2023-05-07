@@ -7,8 +7,8 @@ from sqlalchemy import create_engine, select, update, Select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from db.dao import UserDao, PhotoDao
-from db.models import User, Log, Photo, Settings
+from db.dao import UserDao, PhotoDao, ScheduledLikeDao
+from db.models import User, Log, Photo, Settings, ScheduledLike
 from utilities.LogContext import LogContext
 from utilities.LogLevel import LogLevel
 
@@ -101,6 +101,19 @@ class PostgresStorage:
         statement: Select = select(Settings).where(Settings.name == Settings.remaining_likes_setting)
         remaining_likes: Settings = self.session.scalar(statement=statement)
         return 0 if remaining_likes is None else remaining_likes.value
+
+    def get_scheduled_likes(self) -> list[ScheduledLikeDao]:
+        return [ScheduledLikeDao(
+            db_id=like.id,
+            user=self.get_user_dao(like.user)
+        ) for like in self.session.scalars(statement=select(ScheduledLike)).all()]
+
+    def remove_scheduled_like(self, like: ScheduledLikeDao) -> None:
+        with self.session as session:
+            like: ScheduledLike = session.scalar(statement=select(ScheduledLike).where(ScheduledLike.id == like.id))
+            if like is not None:
+                session.delete(like)
+                session.commit()
 
     def update_user_like_status(self, user_id: str, status: bool):
         with self.session as session:

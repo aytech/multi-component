@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, Select, select, func, update
 from sqlalchemy.orm import Session
 
 from db.dao import UserDao, PhotoDao
-from db.models import User, Log, Settings
+from db.models import User, Log, Settings, ScheduledLike
 from utilities.LogContext import LogContext
 from utilities.LogLevel import LogLevel
 
@@ -151,6 +151,28 @@ class PostgresStorage:
         statement: Select = select(Settings).where(Settings.name == Settings.base_url_setting)
         settings: Settings = self.session.scalar(statement=statement)
         return None if settings is None else settings.value
+
+    def hide_user(self, user_id: int) -> Optional[User]:
+        with self.session as session:
+            user: User = session.scalar(statement=select(User).where(User.id == user_id))
+            if user is not None:
+                user.visible = False
+                session.commit()
+                return user
+        return None
+
+    def schedule_like(self, user_id: int) -> Optional[User]:
+        with self.session as session:
+            user: User = session.scalar(statement=select(User).where(User.id == user_id))
+            scheduled: ScheduledLike = session.scalar(
+                statement=select(ScheduledLike).where(ScheduledLike.user_id == user_id))
+            if user is not None and scheduled is None:
+                session.add(ScheduledLike(
+                    user_id=user_id
+                ))
+                session.commit()
+                return user
+        return None
 
     def __init__(self):
         engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (

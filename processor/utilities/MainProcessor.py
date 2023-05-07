@@ -11,7 +11,7 @@ import requests
 import urllib3
 
 from db.PostgresStorage import PostgresStorage
-from db.dao import UserDao, UserTeaserDao, RemainingLikesDao
+from db.dao import UserDao, UserTeaserDao, RemainingLikesDao, LikesResponseDao
 from utilities.LogLevel import LogLevel
 from utilities.Results import Results
 from utilities.errors.AuthorizationError import AuthorizationError
@@ -46,15 +46,9 @@ class MainProcessor:
         self.storage.add_message(message=message % (user.name, user.user_id, request.status))
 
     def like_user(self, user: UserDao) -> bool:
-        user_local: Optional[UserDao] = self.storage.get_user_by_user_id(user_id=user.user_id)
-
-        if user_local is not None and user_local.liked is True:
-            self.storage.add_message(message='User %s (%s) is already liked, renewing...' % (user.name, user.user_id))
-            self.storage.renew_user_image_urls(user_dao=user_local)
+        if user.liked is True:
+            self.storage.add_message(message='User %s (%s) is already liked, skipping...' % (user.name, user.user_id))
             return False
-
-        if user_local is None:
-            self.storage.add_user(user=user)
 
         url: str = '%s/like/%s' % (self.base_url, user.user_id)
         request = self.pool_manager.request(method='POST', url=url, headers=self.request_headers, body=json.dumps({
@@ -62,8 +56,10 @@ class MainProcessor:
             'liked_content_id': user.photos[0].photo_id,
             'liked_content_type': 'photo'
         }))
-        message = 'User %s (%s) is liked with status %s'
-        self.storage.add_message(message=message % (user.name, user.user_id, request.status))
+        response: LikesResponseDao = Results.like_result(json_data=json.loads(request.data.decode('utf-8')))
+        if response.likes_remaining == 0:
+            return False
+
         self.storage.update_user_like_status(user_id=user.user_id, status=True)
         return True
 
@@ -87,30 +83,15 @@ class MainProcessor:
             photo.url = image_path
         return user
 
-    def process_daily_likes(self) -> None:
-
-        remaining_likes_remote: int
-        profiles_liked: int = 0
-
-        while True:
-            try:
-                results: list[UserDao] = self.get_batch_profile_data()
-            except BaseError as e:
-                self.storage.add_message(message=e.message)
+    def process_likes(self) -> None:
+        for like in self.storage.get_scheduled_likes():
+            time.sleep(3)  # sleep for 3 seconds before retrieving and liking
+            if self.like_user(user=like.user):
+                self.storage.add_message(message='User %s (%s) is liked!' % (like.user.name, like.user.user_id))
+                self.storage.remove_scheduled_like(like=like)
+            else:
+                self.storage.add_message('Terminating scheduled likes as no likes are available')
                 return
-
-            for user in results:
-
-                time.sleep(1)  # wait between likes
-                remaining_likes_remote = self.fetch_remaining_likes().likes_remaining  # this will be either 100 or 0
-
-                if remaining_likes_remote == 0:
-                    self.storage.add_message(message='No more likes available, liked %s profiles' % profiles_liked)
-                    return
-
-                if self.like_user(user=user):
-                    profiles_liked += 1
-                    self.storage.add_update_remaining_likes(remaining_likes=(remaining_likes_remote - profiles_liked))
 
     def collect_profiles(self, limit: int = 100) -> None:
 

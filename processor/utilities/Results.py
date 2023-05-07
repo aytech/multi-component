@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db.dao import UserDao, PhotoDao, UserTeaserDao, RemainingLikesDao
+from db.dao import UserDao, PhotoDao, UserTeaserDao, RemainingLikesDao, LikesResponseDao
 from utilities.DateProcessor import DateProcessor
 from utilities.errors.GenericError import GenericError
 from utilities.errors.TimeoutReceivedError import TimeoutReceivedError
@@ -72,3 +72,24 @@ class Results:
             return RemainingLikesDao(likes_remaining=data['likes']['likes_remaining'])
         return RemainingLikesDao(likes_remaining=data['likes']['likes_remaining'],
                                  rate_limited_until=data['likes']['rate_limited_until'])
+
+    '''
+        {
+            "status":200,
+            "match":false,
+            "likes_remaining":0
+        }
+    '''
+
+    @staticmethod
+    def like_result(json_data=None) -> LikesResponseDao:
+        if json_data is None:
+            raise GenericError(reason='Response data is null')
+        response = LikesResponseDao()
+        if 'likes_remaining' in json_data:
+            response.likes_remaining = json_data['likes_remaining']
+        if 'match' in json_data:
+            response.match = json_data['match']
+        if 'status' in json_data:
+            response.status = json_data['status']
+        return response
