@@ -3,12 +3,10 @@ import { Button, Tooltip } from "antd"
 
 interface Props {
   liked: boolean
-  onClick: () => void
 }
 
 export const LikedButton = ( {
-  liked,
-  onClick
+  liked
 }: Props ) => {
 
   const LikedIcon = () => liked ? (
@@ -22,7 +20,6 @@ export const LikedButton = ( {
       <Button
         className="no-pad"
         icon={ <LikedIcon /> }
-        onClick={ onClick }
         type="text" />
     </Tooltip>
   )

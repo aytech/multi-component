@@ -1,10 +1,7 @@
 import { Card, Carousel, Col, Image, Row, Tooltip } from "antd"
 import { Profile } from "../../../../lib/types"
 import { useState } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
 import "./styles.css"
-import { LikedButton } from "../likedButton"
-import { ScheduledButton } from "../scheduledButton"
 import { Actions } from "../actions"
 
 interface Props {
@@ -20,15 +17,10 @@ export const GalleryItem = ( {
   profile,
   refetch,
   scheduled,
-  searchParams,
   successMessage
 }: Props ) => {
 
   const { Meta } = Card
-
-  const location = useLocation()
-  const navigate = useNavigate()
-
 
   const [ dislikeLoading, setDislikeLoading ] = useState<boolean>( false )
   const [ hideLoading, setHideLoading ] = useState<boolean>( false )
@@ -84,6 +76,16 @@ export const GalleryItem = ( {
     )
   }
 
+  const StatusText = ( { liked }: { liked: boolean } ) => {
+    if ( liked === true ) {
+      return <Col className="text-green" xs={ 16 }><strong>Liked</strong></Col>
+    }
+    if ( scheduled === true ) {
+      return <Col className="text-yellow" xs={ 16 }><strong>Scheduled</strong></Col>
+    }
+    return <Col className="text-blue" xs={ 16 }><strong>New</strong></Col>
+  }
+
   return (
     <Col
       className="card-col"
@@ -106,18 +108,8 @@ export const GalleryItem = ( {
         <Meta title={ `${ profile.name } (${ profile.age })` } description={ (
           <>
             <Row className="description-row">
-              <Col className="table text-right" xs={ 12 }>
-                <ScheduledButton onClick={ () => {
-                  searchParams.set( "scheduled", scheduled ? "1" : "0" )
-                  navigate( `${ location.pathname }?${ searchParams.toString() }` )
-                } } scheduled={ scheduled } />
-              </Col>
-              <Col xs={ 12 }>
-                <LikedButton liked={ profile.liked } onClick={ () => {
-                  searchParams.set( "liked", profile.liked ? "1" : "0" )
-                  navigate( `${ location.pathname }?${ searchParams.toString() }` )
-                } } />
-              </Col>
+              <Col xs={ 8 }>Status:</Col>
+              <StatusText liked={ profile.liked } />
             </Row>
             <Row className="description-row">
               <Col xs={ 8 }>Bio:</Col>

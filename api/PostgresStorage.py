@@ -38,30 +38,27 @@ class PostgresStorage:
         return user_dao.__dict__
 
     def list_users(self, page: int, page_size: int = 10, liked: bool or None = None) -> list[dict]:
-        users: list[dict] = []
         statement: Select = select(User)
         if liked is not None:
-            statement = statement.where(User.liked == liked)
+            statement = statement.where(User.liked)
         # paginate
         statement = statement.where(User.visible).order_by(User.created.desc()).offset(
             (page - 1) * page_size).limit(page_size)
         self.log_message(message=str(statement), context=LogContext.SQL)
-        for user in self.session.scalars(statement=statement).all():
-            users.append(self.get_user_dict(user=user))
-        return users
+        return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
-    def search_users(self, name_partial: str, page: int = 1, size: int = 10, liked: bool or None = None):
-        users: list[dict] = []
-        statement: Select = select(User).where(User.name.like('%{}%'.format(name_partial)))
-        if liked is not None:
-            statement = statement.where(User.liked == liked)
-        # paginate
-        statement = statement.order_by(User.created.desc()).offset((page - 1) * size).limit(size)
-        for user in self.session.scalars(statement=statement).all():
-            users.append(self.get_user_dict(user=user))
-        return users
+    def list_users_by_id(self, ids: list[int]) -> list[dict]:
+        statement: Select = select(User).where(User.visible).filter(User.id.in_(ids)).order_by(User.created.desc())
+        return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
-    def fetch_all_users_count(self):
+    def search_users(self, name_partial: str, page: int = 1, size: int = 10):
+        statement: Select = select(User).where(User.name.like('%{}%'.format(name_partial))).order_by(
+            User.created.desc()).offset((page - 1) * size).limit(size)
+        return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
+
+    def fetch_all_users_count(self, liked: bool or None = None) -> int:
+        if liked:
+            return self.session.query(func.count(User.id)).where(User.liked).scalar()
         return self.session.query(func.count(User.id)).scalar()
 
     def fetch_scheduled(self) -> list[int]:

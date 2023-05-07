@@ -30,3 +30,15 @@
 .carousel-image {
   max-height: 320px;
 }
+
+.text-green {
+  color: #006400;
+}
+
+.text-yellow {
+  color: #e6e600;
+}
+
+.text-blue {
+  color: #00008b;
+}

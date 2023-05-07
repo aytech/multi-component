@@ -2,12 +2,12 @@ import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
 import { Button, Tooltip } from "antd"
 
 interface Props {
-  onClick: () => void
+  liked: boolean
   scheduled: boolean
 }
 
 export const ScheduledButton = ( {
-  onClick,
+  liked,
   scheduled
 }: Props ) => {
 
@@ -17,12 +17,11 @@ export const ScheduledButton = ( {
     <CloseCircleOutlined className="not-liked" />
   )
 
-  return (
+  return liked ? null : (
     <Tooltip title={ scheduled === true ? "Scheduled" : "Not scheduled" }>
       <Button
         className="no-pad"
         icon={ <ScheduledIcon /> }
-        onClick={ onClick }
         type="text" />
     </Tooltip>
   )

@@ -1,4 +1,4 @@
-import { Col, Row, Input } from "antd"
+import { Input } from "antd"
 import "./styles.css"
 import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -21,7 +21,6 @@ export const Search = ( {
   const [ searchValue, setSearchValue ] = useState<string>( searchParams.get( "search" ) || "" )
 
   const onSearch = async () => {
-    console.log( searchValue )
     if ( searchValue === "" ) {
       searchParams.delete( "search" )
     } else {
@@ -34,24 +33,21 @@ export const Search = ( {
   };
 
   return (
-    <Row className="search-bar">
-      <Col xs={ 24 } sm={ 22 } md={ 20 } lg={ 20 } xl={ 20 }>
-        <Search
-          allowClear
-          enterButton
-          onChange={ ( event: any ) => {
-            if ( event.target.value === "" ) { // clear action
-              setSearchValue("")
-              searchParams.delete( "search" )
-              return navigate( `${ location.pathname }?${ searchParams.toString() }` )
-            } else {
-              setSearchValue( event.target.value )
-            }
-          } }
-          onSearch={ onSearch }
-          placeholder="input search text"
-          value={ searchValue } />
-      </Col>
-    </Row>
+    <Search
+      allowClear
+      className="search-bar"
+      enterButton
+      onChange={ ( event: any ) => {
+        if ( event.target.value === "" ) { // clear action
+          setSearchValue( "" )
+          searchParams.delete( "search" )
+          return navigate( `${ location.pathname }?${ searchParams.toString() }` )
+        } else {
+          setSearchValue( event.target.value )
+        }
+      } }
+      onSearch={ onSearch }
+      placeholder="input search text"
+      value={ searchValue } />
   )
 }

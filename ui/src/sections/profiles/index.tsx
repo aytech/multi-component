@@ -1,4 +1,4 @@
-import { Button, Empty, List, Skeleton } from "antd"
+import { Button, Col, Empty, List, Radio, Row, Skeleton } from "antd"
 import { Gallery } from "../gallery"
 import { Paginator } from "../paginator"
 import { Search } from "../search"
@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Page, UsersData } from "../../lib/types"
 import { UrlUtility } from "../../lib/utilities"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import "./styles.css"
 
 interface Props {
   errorMessage: ( message: string ) => void
@@ -22,9 +23,11 @@ export const Profiles = ( {
 
   const [ searchParams ] = useSearchParams()
 
-  const [ userData, setUserData ] = useState<UsersData | null>( null )
-  const [ loading, setLoading ] = useState<boolean>( true )
+
   const [ currentPage, setCurrentPage ] = useState<Page>( { page: 1, size: 10 } )
+  const [ loading, setLoading ] = useState<boolean>( true )
+  const [ statusValue, setStatusValue ] = useState<string>( "all" )
+  const [ userData, setUserData ] = useState<UsersData | null>( null )
 
   const fetchUserData = async () => {
     const parameters: Page = UrlUtility.getSearchParameters( searchParams, currentPage.page, currentPage.size )
@@ -38,13 +41,35 @@ export const Profiles = ( {
     setLoading( false )
   }
 
+  const filterStatuses = ( event: any ) => {
+    const status: string = event.target.value
+    if ( status === "liked" || status === "scheduled" || status === "all" ) {
+      setStatusValue( status )
+      searchParams.set( "status", status )
+      navigate( `${ location.pathname }?${ searchParams.toString() }` )
+    }
+  }
+
   useEffect( () => {
     fetchUserData()
+    setStatusValue( searchParams.get( "status" ) || "all" )
   }, [ searchParams ] )
 
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
     <>
-      <Search paginationEnabled={ true } searchParams={ searchParams } />
+      <Row>
+        <Col xs={ 24 } sm={ 24 } md={ 12 } lg={ 14 } xl={ 16 }>
+          <Search paginationEnabled={ true } searchParams={ searchParams } />
+        </Col>
+        <Col xs={ 24 } sm={ 24 } md={ 11 } lg={ 9 } xl={ 7 } offset={ 1 }>
+          <Radio.Group className="status-selector" onChange={ filterStatuses } value={ statusValue }>
+            <Radio value="liked">Liked</Radio>
+            <Radio value="scheduled">Scheduled</Radio>
+            <Radio value="all">All</Radio>
+          </Radio.Group>
+        </Col>
+      </Row>
+
       <Gallery
         errorMessage={ errorMessage }
         refetch={ fetchUserData }

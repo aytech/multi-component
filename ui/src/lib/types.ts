@@ -25,10 +25,10 @@ export interface UsersData {
 }
 
 export interface Page {
-  liked?: string
   page: number
   search?: string
   size: number
+  status?: string
 }
 
 export interface Log {

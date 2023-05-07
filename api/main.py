@@ -25,17 +25,26 @@ api = Api(app)
 def get_users():
     page: int = 1
     page_size: int = 10
-    liked: bool or None = None
+    status: str or None = None
     try:
         page = int(request.args.get('page', default=1))
         page_size = int(request.args.get('size', default=10))
-        liked = app_request.get_liked_value(request.args.get('liked'))
+        status = request.args.get('status')
     except ValueError:
         pass
+
+    users_count: int = storage_session.fetch_all_users_count(liked=(status == 'liked'))
+    scheduled_users: list[int] = storage_session.fetch_scheduled()
+    if status == 'scheduled':
+        users = storage_session.list_users_by_id(ids=scheduled_users)
+    elif status == 'liked':
+        users = storage_session.list_users(page=page, page_size=page_size, liked=True)
+    else:
+        users = storage_session.list_users(page=page, page_size=page_size)
     return make_response(jsonify({
-        'scheduled': storage_session.fetch_scheduled(),
-        'total': storage_session.fetch_all_users_count(),
-        'users': storage_session.list_users(page=page, page_size=page_size, liked=liked)
+        'scheduled': scheduled_users,
+        'total': users_count,
+        'users': users
     }))
 
 
@@ -43,15 +52,13 @@ def get_users():
 def search_users(name: str):
     page: int = 1
     size: int = 10
-    liked: bool or None = None
     try:
         page = int(request.args.get('page', default=1))
         size = int(request.args.get('size', default=10))
-        liked = app_request.get_liked_value(request.args.get('liked'))
     except ValueError:
         pass
     return make_response(jsonify({
-        'users': storage_session.search_users(name_partial=name, page=page, size=size, liked=liked),
+        'users': storage_session.search_users(name_partial=name, page=page, size=size),
         'total': storage_session.fetch_filtered_users_count(name_partial=name)
     }))
 

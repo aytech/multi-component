@@ -7,12 +7,6 @@ from PostgresStorage import PostgresStorage
 class Request:
     storage: PostgresStorage
 
-    @staticmethod
-    def get_liked_value(value: str or None) -> bool or None:
-        if value is not None:
-            return True if value == '1' else False
-        return None
-
     def get_headers(self) -> dict:
         return {'X-Auth-Token': self.storage.get_api_key(), 'Host': self.storage.get_base_url()}
 
