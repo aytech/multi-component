@@ -24,6 +24,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(100))
     s_number: Mapped[int] = mapped_column(BigInteger)
     user_id: Mapped[str] = mapped_column(String(100))
+    visible: Mapped[bool] = mapped_column(Boolean, default=True)
 
     photos: Mapped[List['Photo']] = relationship(
         back_populates='user', cascade='all, delete-orphan',

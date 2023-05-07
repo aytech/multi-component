@@ -138,14 +138,16 @@ class PostgresStorage:
                         value=remaining_likes))
                 session.commit()
 
-    def renew_user_image_urls(self, user_dao: UserDao):
+    def renew_user_image_urls(self, user_dao: UserDao) -> bool:
         user: User = self.session.scalar(statement=select(User).where(User.user_id == user_dao.user_id))
-        if user is not None:
-            user_id: int = user.id
+        if user is not None and user.visible is True:
             for photo in user_dao.photos:
                 with self.session as session:
-                    session.execute(statement=update(Photo).where(Photo.user_id == user_id).values(url=photo.url))
+                    session.execute(
+                        statement=update(Photo).where(Photo.photo_id == photo.photo_id).values(url=photo.url))
                     session.commit()
+                    return True
+        return False
 
     def add_teaser(self, teaser: str):
         statement: Select = select(Settings).where(Settings.name == Settings.teasers_setting)

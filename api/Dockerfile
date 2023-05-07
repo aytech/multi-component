@@ -17,5 +17,6 @@ COPY errors ./errors
 COPY utilities ./utilities
 COPY main.py ./
 COPY PostgresStorage.py ./
+COPY routes.py ./
 
 CMD [ "gunicorn", "--workers", "4", "--bind", "0.0.0.0:8000", "main:app" ]

@@ -9,8 +9,8 @@ if __name__ == '__main__':
     processor = MainProcessor(storage=storage_session)
 
     while True:
-        # processor.collect_teaser()
+        processor.collect_teaser()
         processor.process_likes()
-        # processor.collect_profiles()
+        processor.collect_profiles()
 
         time.sleep(3600)  # wait for an hour

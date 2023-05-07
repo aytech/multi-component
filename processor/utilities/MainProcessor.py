@@ -118,9 +118,9 @@ class MainProcessor:
                     self.storage.add_message(message=message % (user.name, user.user_id))
                     new_profiles += 1
                 else:
-                    self.storage.renew_user_image_urls(user_dao=user)
-                    message: str = 'User %s (%s) was renewed'
-                    self.storage.add_message(message=message % (user.name, user.user_id))
+                    if self.storage.renew_user_image_urls(user_dao=user):
+                        message: str = 'User %s (%s) was renewed'
+                        self.storage.add_message(message=message % (user.name, user.user_id))
 
                 if profiles_collected >= limit:
                     message: str = 'Terminating collecting profiles, as limit of %s reached, added %s new users'
