@@ -164,7 +164,7 @@ class PostgresStorage:
             user: User = session.scalar(statement=select(User).where(User.id == user_id))
             scheduled: ScheduledLike = session.scalar(
                 statement=select(ScheduledLike).where(ScheduledLike.user_id == user_id))
-            if user is not None and scheduled is None:
+            if user is not None and user.liked is False and scheduled is None:
                 session.add(ScheduledLike(
                     user_id=user_id
                 ))

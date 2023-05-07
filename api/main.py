@@ -69,7 +69,7 @@ def like_user(user_id: int):
     status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
     return make_response(jsonify({
         'scheduled': result is not None,
-        'message': 'User scheduled for like' if result is not None else 'User already scheduled'
+        'message': 'User scheduled for like' if result is not None else 'User already scheduled or liked'
     }), status)
 
 
