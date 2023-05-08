@@ -42,14 +42,13 @@ class User(Base):
     liked: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String(100))
     s_number: Mapped[int] = mapped_column(BigInteger)
+    scheduled: Mapped[bool] = mapped_column(Boolean, default=False)
     user_id: Mapped[str] = mapped_column(String(100))
     visible: Mapped[bool] = mapped_column(Boolean, default=True)
 
     photos: Mapped[List['Photo']] = relationship(
         back_populates='user', cascade='all, delete-orphan',
     )
-
-    scheduled_like: Mapped['ScheduledLike'] = relationship(back_populates='user')
 
     def __repr__(self):
         return f'''
@@ -69,14 +68,6 @@ class User(Base):
     def get_created(self):
         created: datetime = self.created.strftime('%d %b %H:%M:%S')
         return created
-
-
-class ScheduledLike(Base):
-    __tablename__ = 'scheduled_like'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    user: Mapped['User'] = relationship(back_populates='scheduled_like')
 
 
 class Log(Base, SerializerMixin):

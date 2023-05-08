@@ -7,8 +7,8 @@ from sqlalchemy import create_engine, select, update, Select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from db.dao import UserDao, PhotoDao, ScheduledLikeDao
-from db.models import User, Log, Photo, Settings, ScheduledLike
+from db.dao import UserDao, PhotoDao
+from db.models import User, Log, Photo, Settings
 from utilities.LogContext import LogContext
 from utilities.LogLevel import LogLevel
 
@@ -19,18 +19,18 @@ class PostgresStorage:
     @staticmethod
     def get_user_dao(user: User) -> UserDao:
         user_dao: UserDao = UserDao(
-            bio=user.bio,
-            distance_mi=user.distance_mi,
             liked=user.liked,
             name=user.name,
             s_number=user.s_number,
             user_id=user.user_id
         )
+        user_dao.bio = user.bio
         user_dao.city = user.city
         user_dao.photos = [PhotoDao(
             photo_id=photo.photo_id,
             url=photo.url
         ) for photo in user.photos]
+        user_dao.set_distance(user.distance_mi)
         return user_dao
 
     def get_user(self, user_id: str) -> Optional[UserDao]:
@@ -102,17 +102,24 @@ class PostgresStorage:
         remaining_likes: Settings = self.session.scalar(statement=statement)
         return 0 if remaining_likes is None else remaining_likes.value
 
-    def get_scheduled_likes(self) -> list[ScheduledLikeDao]:
-        return [ScheduledLikeDao(
-            db_id=like.id,
-            user=self.get_user_dao(like.user)
-        ) for like in self.session.scalars(statement=select(ScheduledLike)).all()]
+    def get_scheduled_likes(self) -> list[UserDao]:
+        return [UserDao(
+            db_id=user.id,
+            liked=user.liked,
+            name=user.name,
+            photos=[PhotoDao(
+                photo_id=photo.photo_id,
+                url=photo.url
+            ) for photo in user.photos],
+            s_number=user.s_number,
+            user_id=user.user_id
+        ) for user in self.session.scalars(statement=select(User).where(User.scheduled)).all()]
 
-    def remove_scheduled_like(self, like: ScheduledLikeDao) -> None:
+    def remove_scheduled_like(self, user: UserDao) -> None:
         with self.session as session:
-            like: ScheduledLike = session.scalar(statement=select(ScheduledLike).where(ScheduledLike.id == like.id))
-            if like is not None:
-                session.delete(like)
+            user: User = session.scalar(statement=select(User).where(User.id == user.id))
+            if user is not None:
+                session.execute(statement=update(User).where(User.id == user.id).values(scheduled=False))
                 session.commit()
 
     def update_user_like_status(self, user_id: str, status: bool):

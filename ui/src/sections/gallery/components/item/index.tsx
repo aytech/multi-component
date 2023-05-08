@@ -8,7 +8,6 @@ interface Props {
   errorMessage: ( message: string ) => void
   profile: Profile
   refetch: () => void
-  scheduled: boolean
   searchParams: URLSearchParams
   successMessage: ( message: string ) => void
 }
@@ -16,7 +15,6 @@ export const GalleryItem = ( {
   errorMessage,
   profile,
   refetch,
-  scheduled,
   successMessage
 }: Props ) => {
 
@@ -76,7 +74,7 @@ export const GalleryItem = ( {
     )
   }
 
-  const StatusText = ( { liked }: { liked: boolean } ) => {
+  const StatusText = ( { liked, scheduled }: { liked: boolean, scheduled: boolean } ) => {
     if ( liked === true ) {
       return <Col className="text-green" xs={ 16 }><strong>Liked</strong></Col>
     }
@@ -109,7 +107,7 @@ export const GalleryItem = ( {
           <>
             <Row className="description-row">
               <Col xs={ 8 }>Status:</Col>
-              <StatusText liked={ profile.liked } />
+              <StatusText liked={ profile.liked } scheduled={ profile.scheduled } />
             </Row>
             <Row className="description-row">
               <Col xs={ 8 }>Bio:</Col>

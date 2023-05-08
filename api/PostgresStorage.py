@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, Select, select, func, update
 from sqlalchemy.orm import Session
 
 from db.dao import UserDao, PhotoDao
-from db.models import User, Log, Settings, ScheduledLike
+from db.models import User, Log, Settings
 from utilities.LogContext import LogContext
 from utilities.LogLevel import LogLevel
 
@@ -28,6 +28,7 @@ class PostgresStorage:
             liked=user.liked,
             name=user.name,
             s_number=user.s_number,
+            scheduled=user.scheduled,
             user_id=user.user_id
         )
         user_dao.age = user.get_age()
@@ -37,13 +38,16 @@ class PostgresStorage:
         ).__dict__ for photo in user.photos]
         return user_dao.__dict__
 
-    def list_users(self, page: int, page_size: int = 10, liked: bool or None = None) -> list[dict]:
-        statement: Select = select(User)
-        if liked is not None:
-            statement = statement.where(User.liked)
+    def list_users(self, status: str, page: int, page_size: int = 10) -> list[dict]:
+        statement: Select = select(User).filter(User.visible)
+        if status == 'liked':
+            statement = statement.filter(User.liked)
+        elif status == 'scheduled':
+            statement = statement.filter(User.scheduled)
+        elif status == 'new':
+            statement = statement.filter(User.liked.is_(False), User.scheduled.is_(False))
         # paginate
-        statement = statement.where(User.visible).order_by(User.created.desc()).offset(
-            (page - 1) * page_size).limit(page_size)
+        statement = statement.order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
         self.log_message(message=str(statement), context=LogContext.SQL)
         return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
@@ -56,13 +60,15 @@ class PostgresStorage:
             User.created.desc()).offset((page - 1) * size).limit(size)
         return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
-    def fetch_all_users_count(self, liked: bool or None = None) -> int:
-        if liked:
-            return self.session.query(func.count(User.id)).where(User.liked).scalar()
-        return self.session.query(func.count(User.id)).scalar()
-
-    def fetch_scheduled(self) -> list[int]:
-        return [like.user_id for like in self.session.scalars(statement=select(ScheduledLike)).all()]
+    def fetch_all_users_count(self, status: str) -> int:
+        if status == 'liked':
+            return self.session.query(func.count(User.id)).filter(User.visible, User.liked).scalar()
+        elif status == 'scheduled':
+            return self.session.query(func.count(User.id)).filter(User.visible, User.scheduled).scalar()
+        elif status == 'new':
+            return self.session.query(func.count(User.id)).filter(User.visible, User.scheduled.is_(False),
+                                                                  User.liked.is_(False)).scalar()
+        return self.session.query(func.count(User.id)).where(User.visible).scalar()
 
     def fetch_filtered_users_count(self, name_partial: str):
         return self.session.query(func.count(User.id)).where(User.name.like('%{}%'.format(name_partial))).scalar()
@@ -162,25 +168,19 @@ class PostgresStorage:
     def schedule_like(self, user_id: int) -> Optional[User]:
         with self.session as session:
             user: User = session.scalar(statement=select(User).where(User.id == user_id))
-            scheduled: ScheduledLike = session.scalar(
-                statement=select(ScheduledLike).where(ScheduledLike.user_id == user_id))
-            if user is not None and user.liked is False and scheduled is None:
-                session.add(ScheduledLike(
-                    user_id=user_id
-                ))
+            if user is not None and user.liked is False and user.scheduled is False:
+                session.execute(statement=update(User).where(User.id == user.id).values(scheduled=True))
                 session.commit()
                 return user
         return None
 
-    def unschedule_like(self, user_id: int) -> Optional[ScheduledLike]:
+    def unschedule_like(self, user_id: int) -> Optional[User]:
         with self.session as session:
             user: User = session.scalar(statement=select(User).where(User.id == user_id))
-            scheduled: ScheduledLike = session.scalar(
-                statement=select(ScheduledLike).where(ScheduledLike.user_id == user_id))
-            if user is not None and scheduled is not None:
-                session.delete(scheduled)
+            if user is not None and user.scheduled is True:
+                session.execute(statement=update(User).where(User.id == user.id).values(scheduled=False))
                 session.commit()
-                return scheduled
+                return user
         return None
 
     def __init__(self):

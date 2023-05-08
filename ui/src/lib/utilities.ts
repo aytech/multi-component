@@ -56,7 +56,7 @@ export const UrlUtility = {
     if ( search !== null && search.trim() !== "" ) {
       searchParameters.search = search
     }
-    if ( status !== null && [ "liked", "scheduled", "all" ].indexOf( status ) !== -1 ) {
+    if ( status !== null && [ "liked", "scheduled", "new" ].indexOf( status ) !== -1 ) {
       searchParameters.status = status
     }
     return searchParameters

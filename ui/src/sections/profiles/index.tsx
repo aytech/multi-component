@@ -26,7 +26,7 @@ export const Profiles = ( {
 
   const [ currentPage, setCurrentPage ] = useState<Page>( { page: 1, size: 10 } )
   const [ loading, setLoading ] = useState<boolean>( true )
-  const [ statusValue, setStatusValue ] = useState<string>( "all" )
+  const [ statusValue, setStatusValue ] = useState<string>()
   const [ userData, setUserData ] = useState<UsersData | null>( null )
 
   const fetchUserData = async () => {
@@ -43,7 +43,7 @@ export const Profiles = ( {
 
   const filterStatuses = ( event: any ) => {
     const status: string = event.target.value
-    if ( status === "liked" || status === "scheduled" || status === "all" ) {
+    if ( status === "liked" || status === "scheduled" || status === "new" ) {
       setStatusValue( status )
       searchParams.set( "status", status )
       navigate( `${ location.pathname }?${ searchParams.toString() }` )
@@ -52,7 +52,7 @@ export const Profiles = ( {
 
   useEffect( () => {
     fetchUserData()
-    setStatusValue( searchParams.get( "status" ) || "all" )
+    setStatusValue( searchParams.get( "status" ) || undefined )
   }, [ searchParams ] )
 
   const PageContent = () => userData !== undefined && userData !== null && userData.total > 0 ? (
@@ -65,7 +65,7 @@ export const Profiles = ( {
           <Radio.Group className="status-selector" onChange={ filterStatuses } value={ statusValue }>
             <Radio value="liked">Liked</Radio>
             <Radio value="scheduled">Scheduled</Radio>
-            <Radio value="all">All</Radio>
+            <Radio value="new">New</Radio>
           </Radio.Group>
         </Col>
       </Row>
@@ -86,6 +86,7 @@ export const Profiles = ( {
           type="primary"
           onClick={ () => {
             searchParams.delete( "search" )
+            searchParams.delete( "status" )
             navigate( `${ location.pathname }?${ searchParams.toString() }` )
           } }>
           Go back

@@ -19,10 +19,6 @@ export const Gallery = ( {
   userData
 }: Props ) => {
 
-  const isScheduled = ( profile_id: number ) => {
-    return userData?.scheduled !== undefined && userData.scheduled.indexOf( profile_id ) !== -1
-  }
-
   const GalleryCollection = () => userData !== null ? (
     <>
       { userData.users.map( profile => (
@@ -31,7 +27,6 @@ export const Gallery = ( {
           key={ profile.id }
           profile={ profile }
           refetch={ refetch }
-          scheduled={ isScheduled( profile.id ) }
           searchParams={ searchParams }
           successMessage={ successMessage } />
       ) ) }

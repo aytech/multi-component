@@ -1,9 +1,5 @@
 import json
-import math
-import os
-import shutil
 import time
-from random import random
 from typing import Optional
 
 import certifi
@@ -39,12 +35,6 @@ class MainProcessor:
             raise AuthorizationError(message='while fetching teaser profile')
         return Results.teaser_user(json_data=json.loads(request.data.decode('utf-8')))
 
-    def pass_user(self, user: UserDao) -> None:
-        request = self.pool_manager.request(method='GET', url='%s/pass/%s' % (self.base_url, user.user_id),
-                                            headers=self.request_headers, fields={'s_number': user.s_number})
-        message = 'User %s (%s) is passed with status code %s'
-        self.storage.add_message(message=message % (user.name, user.user_id, request.status))
-
     def like_user(self, user: UserDao) -> bool:
         if user.liked is True:
             self.storage.add_message(message='User %s (%s) is already liked, skipping...' % (user.name, user.user_id))
@@ -70,25 +60,25 @@ class MainProcessor:
             raise AuthorizationError(message='while fetching teaser profile')
         return Results.remaining_likes(json_data=json.loads(request.data.decode('utf-8')))
 
-    def download_images(self, user: UserDao) -> UserDao:
-        for photo in user.photos:
-            directory_name: str = 'images/%s' % user.user_id
-            image_path = '%s/photo_%s.jpg' % (directory_name, math.ceil(random() * 100))
-            if not os.path.exists(directory_name):
-                os.mkdir(directory_name)
-            request = self.pool_manager.request('GET', url=photo.url, preload_content=False)
-            with open(image_path, 'wb') as out_file:
-                shutil.copyfileobj(request, out_file)
-            request.release_conn()
-            photo.url = image_path
-        return user
+    # def download_images(self, user: UserDao) -> UserDao:
+    #     for photo in user.photos:
+    #         directory_name: str = 'images/%s' % user.user_id
+    #         image_path = '%s/photo_%s.jpg' % (directory_name, math.ceil(random() * 100))
+    #         if not os.path.exists(directory_name):
+    #             os.mkdir(directory_name)
+    #         request = self.pool_manager.request('GET', url=photo.url, preload_content=False)
+    #         with open(image_path, 'wb') as out_file:
+    #             shutil.copyfileobj(request, out_file)
+    #         request.release_conn()
+    #         photo.url = image_path
+    #     return user
 
     def process_likes(self) -> None:
-        for like in self.storage.get_scheduled_likes():
+        for user in self.storage.get_scheduled_likes():
             time.sleep(3)  # sleep for 3 seconds before retrieving and liking
-            if self.like_user(user=like.user):
-                self.storage.add_message(message='User %s (%s) is liked!' % (like.user.name, like.user.user_id))
-                self.storage.remove_scheduled_like(like=like)
+            if self.like_user(user=user):
+                self.storage.add_message(message='User %s (%s) is liked!' % (user.name, user.user_id))
+                self.storage.remove_scheduled_like(user=user)
             else:
                 self.storage.add_message('Terminating scheduled likes as no likes are available')
                 return

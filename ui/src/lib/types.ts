@@ -10,6 +10,7 @@ export interface Profile {
   name: string
   photos: Array<Photo>
   s_number: number
+  scheduled: boolean
   user_id: string
 }
 
@@ -19,7 +20,6 @@ export interface Photo {
 }
 
 export interface UsersData {
-  scheduled: Array<number>
   total: number
   users: Array<Profile>
 }

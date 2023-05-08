@@ -8,7 +8,7 @@ from flask_restful import Api
 
 from PostgresStorage import PostgresStorage
 from db.dao import RemainingLikesDao
-from db.models import User, ScheduledLike
+from db.models import User
 from routes import app_routes
 from utilities.Logs import Logs
 from utilities.Request import Request
@@ -32,19 +32,9 @@ def get_users():
         status = request.args.get('status')
     except ValueError:
         pass
-
-    users_count: int = storage_session.fetch_all_users_count(liked=(status == 'liked'))
-    scheduled_users: list[int] = storage_session.fetch_scheduled()
-    if status == 'scheduled':
-        users = storage_session.list_users_by_id(ids=scheduled_users)
-    elif status == 'liked':
-        users = storage_session.list_users(page=page, page_size=page_size, liked=True)
-    else:
-        users = storage_session.list_users(page=page, page_size=page_size)
     return make_response(jsonify({
-        'scheduled': scheduled_users,
-        'total': users_count,
-        'users': users
+        'total': storage_session.fetch_all_users_count(status=status),
+        'users': storage_session.list_users(status=status, page=page, page_size=page_size)
     }))
 
 
@@ -68,18 +58,16 @@ def like_user(user_id: int):
     result: Optional[User] = storage_session.schedule_like(user_id=user_id)
     status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
     return make_response(jsonify({
-        'scheduled': result is not None,
         'message': 'User scheduled for like' if result is not None else 'User already scheduled or liked'
     }), status)
 
 
 @app.route(app_routes['DISLIKE_USER'], methods=['POST'])
 def dislike_user(user_id: int):
-    result: Optional[ScheduledLike] = storage_session.unschedule_like(user_id=user_id)
+    result: Optional[User] = storage_session.unschedule_like(user_id=user_id)
     status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
     return make_response(jsonify({
-        'unscheduled': result is not None,
-        'message': 'User unscheduled' if result is not None else 'User already unscheduled'
+        'message': 'User unscheduled' if result is not None else 'User not scheduled'
     }), status)
 
 
@@ -88,7 +76,6 @@ def hide_user(user_id: int):
     hidden_user: Optional[User] = storage_session.hide_user(user_id=user_id)
     status = requests.status_codes.codes.ok if hidden_user is not None else requests.status_codes.codes.bad_request
     return make_response(jsonify({
-        'hidden': hidden_user is not None,
         'message': 'User was hidden' if hidden_user is not None else 'User not found'
     }), status)
 

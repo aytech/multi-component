@@ -23,6 +23,7 @@ class User(Base):
     liked: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String(100))
     s_number: Mapped[int] = mapped_column(BigInteger)
+    scheduled: Mapped[bool] = mapped_column(Boolean, default=False)
     user_id: Mapped[str] = mapped_column(String(100))
     visible: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -30,25 +31,10 @@ class User(Base):
         back_populates='user', cascade='all, delete-orphan',
     )
 
-    scheduled_like: Mapped['ScheduledLike'] = relationship(back_populates='user')
-
     def __repr__(self):
         return f'''
             User(city={self.city!r}, id={self.id!r}, name={self.name!r}, s_number={self.s_number!r},
             'user_id={self.user_id})
-        '''
-
-
-class ScheduledLike(Base):
-    __tablename__ = 'scheduled_like'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    user: Mapped['User'] = relationship(back_populates='scheduled_like')
-
-    def __repr__(self):
-        return f'''
-            ScheduledLike(user={self.user_id})
         '''
 
 

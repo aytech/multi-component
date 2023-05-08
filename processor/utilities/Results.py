@@ -32,12 +32,12 @@ class Results:
             if 'user' not in result:
                 return users
             new_user = UserDao(
-                bio=result['user']['bio'],
-                distance_mi=result['distance_mi'],
                 liked=False,
                 name=result['user']['name'],
                 s_number=result['s_number'],
                 user_id=result['user']['_id'])
+            new_user.bio = result['user']['bio']
+            new_user.set_distance(result['distance_mi'])
             if 'birth_date' in result['user']:
                 new_user.age = DateProcessor.get_user_age(birth_date=result['user']['birth_date'])
                 new_user.birth_date = DateProcessor.get_user_birth_date(birth_date=result['user']['birth_date'])

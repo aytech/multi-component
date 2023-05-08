@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.user (
     liked BOOLEAN DEFAULT FALSE,
     name VARCHAR(100),
     s_number BIGINT,
+    scheduled BOOLEAN DEFAULT FALSE,
     user_id VARCHAR(100) NOT NULL,
     visible BOOLEAN DEFAULT TRUE
 );

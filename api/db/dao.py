@@ -27,10 +27,11 @@ class UserDao:
     name: str
     photos: list[PhotoDao]
     s_number: int
+    scheduled: bool
     user_id: str
 
     def __init__(self, bio: str, birth_date: str, city: str, created: str, distance_mi: float, db_id: int, liked: bool,
-                 name: str, s_number: int, user_id: str):
+                 name: str, s_number: int, scheduled: bool, user_id: str):
         self.age = 0
         self.bio = bio
         self.birth_date = birth_date
@@ -41,6 +42,7 @@ class UserDao:
         self.liked = liked
         self.name = name
         self.s_number = s_number
+        self.scheduled = scheduled
         self.user_id = user_id
 
     def __str__(self):
@@ -49,16 +51,6 @@ class UserDao:
             distance={self.distance}, id={self.id}, liked={self.liked},, name={self.name},
             photos={[str(photo) for photo in self.photos]} s_number={self.s_number}, 'user_id={self.user_id})
         '''
-
-
-class ScheduledDao:
-    id: int
-
-    def __init__(self, db_id: int):
-        self.id = db_id
-
-    def __str__(self):
-        return f'Scheduled(user={self.id})'
 
 
 class RemainingLikesDao:
