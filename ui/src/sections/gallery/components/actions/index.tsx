@@ -1,4 +1,4 @@
-import { DeleteOutlined, DislikeOutlined, LikeOutlined, StopOutlined } from "@ant-design/icons"
+import { DislikeOutlined, LikeOutlined, StopOutlined } from "@ant-design/icons"
 import { Button, Col, Tooltip } from "antd"
 
 interface Props {
@@ -7,7 +7,9 @@ interface Props {
   hide: () => void
   hiding: boolean
   like: () => void
+  liked: boolean
   liking: boolean
+  scheduled: boolean
 }
 
 export const Actions = ( {
@@ -16,13 +18,16 @@ export const Actions = ( {
   hide,
   hiding,
   like,
-  liking
+  liked,
+  liking,
+  scheduled
 }: Props ) => {
   return (
     <>
       <Col className="text-center" xs={ disliking || hiding ? 6 : liking ? 12 : 8 }>
         <Button
           className="btn-green"
+          disabled={ scheduled }
           loading={ liking }
           onClick={ like }
           type="primary">
@@ -33,6 +38,7 @@ export const Actions = ( {
       </Col>
       <Col className="text-center" xs={ liking || hiding ? 6 : disliking ? 12 : 8 }>
         <Button
+          disabled={ liked }
           loading={ disliking }
           onClick={ dislike }
           type="primary">

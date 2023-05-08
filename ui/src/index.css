@@ -29,6 +29,14 @@ body {
   background-color: #00b300;
 }
 
+.ant-btn-primary.btn-green:disabled {
+  cursor: not-allowed;
+  border-color: #d9d9d9;
+  color: rgba(0, 0, 0, 0.25);
+  background-color: rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+}
+
 .ant-btn-primary.btn-green:focus-visible {
   outline: 4px solid #00e600;
 }

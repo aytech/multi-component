@@ -136,7 +136,9 @@ export const GalleryItem = ( {
                 like={ () => {
                   likeProfile( profile.id )
                 } }
-                liking={ likeLoading } />
+                liked={ profile.liked }
+                liking={ likeLoading }
+                scheduled={ profile.scheduled } />
             </Row>
           </>
         ) }></Meta>
