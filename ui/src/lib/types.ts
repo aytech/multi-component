@@ -15,13 +15,13 @@ export interface Profile {
 }
 
 export interface Photo {
-  photo_id: string
+  photoId: string
   url: string
 }
 
 export interface UsersData {
   total: number
-  users: Array<Profile>
+  profiles: Array<Profile>
 }
 
 export interface Page {

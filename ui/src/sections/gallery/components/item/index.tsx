@@ -61,8 +61,8 @@ export const GalleryItem = ( {
     } )
   }
 
-  const ShortBio = ( { bio }: { bio: string | null } ) => {
-    if ( bio === null ) {
+  const ShortBio = ( { bio }: { bio?: string | null } ) => {
+    if ( bio === null || bio == undefined ) {
       return <span></span>
     }
     return bio.length < 15 ? (
@@ -112,7 +112,7 @@ export const GalleryItem = ( {
             <Row className="description-row">
               <Col xs={ 8 }>Bio:</Col>
               <Col xs={ 16 }>
-                <ShortBio bio={ profile.bio } />
+                <ShortBio bio={ profile?.bio } />
               </Col>
             </Row>
             <Row className="description-row">

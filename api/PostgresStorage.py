@@ -179,13 +179,13 @@ class PostgresStorage:
     def get_scheduled(self) -> int:
         return self.session.query(func.count(User.id)).filter(User.scheduled).scalar()
 
-    def hide_user(self, user_id: int) -> Optional[User]:
+    def hide_user(self, user_id: int) -> Optional[UserDao]:
         with self.session as session:
             user: User = session.scalar(statement=select(User).where(User.id == user_id))
             if user is not None:
                 user.visible = False
                 session.commit()
-                return user
+                return UserDao(db_id=user.id, s_number=user.s_number, user_id=user.user_id)
         return None
 
     def schedule_like(self, user_id: int) -> Optional[User]:

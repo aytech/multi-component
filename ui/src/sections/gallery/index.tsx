@@ -21,7 +21,7 @@ export const Gallery = ( {
 
   const GalleryCollection = () => userData !== null ? (
     <>
-      { userData.users.map( profile => (
+      { userData.profiles.map( profile => (
         <GalleryItem
           errorMessage={ errorMessage }
           key={ profile.id }

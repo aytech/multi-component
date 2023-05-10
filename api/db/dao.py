@@ -30,17 +30,18 @@ class UserDao:
     scheduled: bool
     user_id: str
 
-    def __init__(self, bio: str, birth_date: str, city: str, created: str, distance_mi: float, db_id: int, liked: bool,
-                 name: str, s_number: int, scheduled: bool, user_id: str):
+    def __init__(self, db_id: int, s_number: int, user_id: str, bio: str = None, birth_date: str = None,
+                 city: str = None, created: str = None, distance_mi: float = None, liked: bool = False,
+                 name: str = None, scheduled: bool = False):
         self.age = 0
-        self.bio = bio
-        self.birth_date = birth_date
-        self.city = city
-        self.created = created
+        self.bio = bio if bio is not None else ''
+        self.birth_date = birth_date if birth_date is not None else ''
+        self.city = city if city is not None else ''
+        self.created = created if created is not None else ''
         self.distance = 0 if distance_mi is None else round(distance_mi * 1.6, 2)
         self.id = db_id
         self.liked = liked
-        self.name = name
+        self.name = name if name is not None else ''
         self.s_number = s_number
         self.scheduled = scheduled
         self.user_id = user_id

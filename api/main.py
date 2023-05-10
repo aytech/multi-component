@@ -1,18 +1,26 @@
 import json
+import os
+import grpc
 from typing import Optional
 
 import requests as requests
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from flask_restful import Api
+from google.protobuf.json_format import MessageToJson
 
+import protos.profiles_pb2_grpc
+from protos.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
 from PostgresStorage import PostgresStorage
-from db.dao import RemainingLikesDao
+from db.dao import RemainingLikesDao, UserDao
 from db.models import User
 from routes import app_routes
 from utilities.Logs import Logs
 from utilities.Request import Request
 from utilities.Results import Results
+
+grpc_host: str = os.environ.get('GRPC_HOST', default='localhost')
+grpc_port: str = os.environ.get('GRPC_PORT', default='50051')
 
 storage_session: PostgresStorage = PostgresStorage()
 app_request: Request = Request(storage=storage_session)
@@ -25,17 +33,17 @@ api = Api(app)
 def get_users():
     page: int = 1
     page_size: int = 10
-    status: str or None = None
+    status: Optional[str] = None
     try:
         page = int(request.args.get('page', default=1))
         page_size = int(request.args.get('size', default=10))
         status = request.args.get('status')
     except ValueError:
         pass
-    return make_response(jsonify({
-        'total': storage_session.fetch_all_users_count(status=status),
-        'users': storage_session.list_users(status=status, page=page, page_size=page_size)
-    }))
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.profiles_pb2_grpc.ConnectorStub(channel=channel)
+        response = stub.FetchProfiles(ProfilesRequest(status=status, page=page, page_size=page_size))
+        return make_response(MessageToJson(response.reply), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['SEARCH_USERS'], methods=['GET'])
@@ -49,10 +57,10 @@ def search_users(name: str):
         status = request.args.get('status')
     except ValueError:
         pass
-    return make_response(jsonify({
-        'users': storage_session.search_users(name_partial=name, page=page, size=size, status=status),
-        'total': storage_session.fetch_filtered_users_count(name_partial=name, status=status)
-    }))
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.profiles_pb2_grpc.ConnectorStub(channel=channel)
+        response = stub.SearchProfiles(ProfilesSearchRequest(value=name, status=status, page=page, page_size=size))
+        return make_response(MessageToJson(response.reply), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['LIKE_USER'], methods=['POST'])
@@ -75,11 +83,15 @@ def dislike_user(user_id: int):
 
 @app.route(app_routes['HIDE_USER'], methods=['POST'])
 def hide_user(user_id: int):
-    hidden_user: Optional[User] = storage_session.hide_user(user_id=user_id)
-    status = requests.status_codes.codes.ok if hidden_user is not None else requests.status_codes.codes.bad_request
+    hidden_user: Optional[UserDao] = storage_session.hide_user(user_id=user_id)
+    response_code: int = requests.status_codes.codes.ok
+    if hidden_user is not None:
+        app_request.pass_profile(user=hidden_user)
+    else:
+        response_code = requests.status_codes.codes.bad_request
     return make_response(jsonify({
         'message': 'User was hidden' if hidden_user is not None else 'User not found'
-    }), status)
+    }), response_code)
 
 
 @app.route(app_routes['GET_LOGS'], methods=['GET'])

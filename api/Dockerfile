@@ -14,6 +14,7 @@ RUN pip install -r ./requirements.txt
 
 COPY db ./db
 COPY errors ./errors
+COPY protos ./protos
 COPY utilities ./utilities
 COPY main.py ./
 COPY PostgresStorage.py ./

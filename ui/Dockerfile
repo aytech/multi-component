@@ -1,4 +1,4 @@
-FROM node:alpine as builder
+FROM node:20-alpine as builder
 WORKDIR /app
 # Install dependencies
 COPY ./tsconfig.json .
