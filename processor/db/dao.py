@@ -78,11 +78,10 @@ class RemainingLikesDao:
 
 
 class LikesResponseDao:
-    likes_remaining: int
+    likes_remaining: int = None
     match: bool
     status: int
 
-    def __init__(self, likes_remaining: int = 0, match: bool = False, status: int = None):
-        self.likes_remaining = likes_remaining
+    def __init__(self, match: bool = False, status: int = None):
         self.match = match
         self.status = status

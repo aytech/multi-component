@@ -1,8 +1,8 @@
-import { Button, Col, Divider, Input, List, Row, Skeleton } from "antd"
+import { Button, Col, Divider, Input, List, Row, Skeleton, Table } from "antd"
 import "./styles.css"
 import { useEffect, useState } from "react"
 import { UrlUtility } from "../../lib/utilities"
-import { LikesData, SettingsData } from "../../lib/types"
+import { LikesData, SettingsData, SettingsOtherData } from "../../lib/types"
 import { ApiOutlined, KeyOutlined, SaveOutlined } from "@ant-design/icons"
 
 interface Props {
@@ -20,17 +20,45 @@ export const Settings = ( {
   const [ apiKey, setApiKey ] = useState<string>()
   const [ apiLoading, setApiLoading ] = useState<boolean>( false )
   const [ baseUrl, setBaseUrl ] = useState<string>()
-  const [ likes, setLikes ] = useState<LikesData>()
   const [ likesLoading, setLikesLoading ] = useState<boolean>( false )
   const [ settings, setSettings ] = useState<SettingsData>()
+  const [ otherSettings, setOtherSettings ] = useState<Array<SettingsOtherData>>( [] )
   const [ settingsLoading, setSettingsLoading ] = useState<boolean>( false )
   const [ urlLoading, setUrlLoading ] = useState<boolean>( false )
+
+  const otherSettingsColumns = [
+    {
+      title: 'Name',
+      dataIndex: 'description',
+      key: 'name',
+    },
+    {
+      title: 'Value',
+      dataIndex: 'value',
+      key: 'value',
+    },
+    {
+      title: 'Additional',
+      dataIndex: 'additionalDescription',
+      key: 'additional',
+    },
+    {
+      title: 'Additional value',
+      dataIndex: 'additionalValue',
+      key: 'avalue',
+    },
+  ]
 
   const fetchSettings = async () => {
     setSettingsLoading( true )
     const response = await fetch( UrlUtility.getSettingsUrl() )
     const settingsData: SettingsData = await response.json();
     setSettings( settingsData )
+    setOtherSettings( [ {
+      description: 'Scheduled users',
+      key: 1,
+      value: settingsData.scheduled,
+    } ] )
     setSettingsLoading( false )
   }
 
@@ -38,7 +66,13 @@ export const Settings = ( {
     setLikesLoading( true )
     const response = await fetch( UrlUtility.getSettingsLikesUrl() )
     const likesData: LikesData = await response.json()
-    setLikes( likesData )
+    setOtherSettings( ( current: Array<SettingsOtherData> ) => current.concat( {
+      additionalDescription: "Until",
+      additionalValue: likesData.rate_limited_until,
+      description: "Remaining likes",
+      key: 2,
+      value: likesData.likes_remaining,
+    } ) )
     setLikesLoading( false )
   }
 
@@ -82,22 +116,12 @@ export const Settings = ( {
     />
   )
 
-  const Likes = () => likesLoading ? (
+  const OtherSettings = () => likesLoading || settingsLoading ? (
     <Skeleton loading active>
       <List.Item.Meta avatar={ <Skeleton.Image /> } />
     </Skeleton>
   ) : (
-    <List
-      size="large"
-      bordered
-      dataSource={ [ { ...likes, key: 1 } ] }
-      renderItem={ ( item ) => (
-        <List.Item>
-          <strong>Remaining:</strong> { item.likes_remaining }&nbsp;
-          <strong>until:</strong> { item.rate_limited_until }
-        </List.Item>
-      ) }
-    />
+    <Table columns={ otherSettingsColumns } dataSource={ otherSettings } pagination={ false } />
   )
 
   useEffect( () => {
@@ -150,8 +174,8 @@ export const Settings = ( {
       </Row>
       <Divider className="settings-divider" orientation="left">Teaser likes</Divider>
       <Teasers />
-      <Divider className="settings-divider" orientation="left">Likes remaining</Divider>
-      <Likes />
+      <Divider className="settings-divider" orientation="left">Other data</Divider>
+      <OtherSettings />
     </>
   )
 }

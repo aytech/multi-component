@@ -47,7 +47,7 @@ class MainProcessor:
             'liked_content_type': 'photo'
         }))
         response: LikesResponseDao = Results.like_result(json_data=json.loads(request.data.decode('utf-8')))
-        if response.likes_remaining == 0:
+        if response.likes_remaining is not None and response.likes_remaining == 0:
             return False
 
         self.storage.update_user_like_status(user_id=user.user_id, status=True)

@@ -156,6 +156,9 @@ class PostgresStorage:
         settings: Settings = self.session.scalar(statement=statement)
         return None if settings is None else settings.value
 
+    def get_scheduled(self) -> int:
+        return self.session.query(func.count(User.id)).filter(User.scheduled).scalar()
+
     def hide_user(self, user_id: int) -> Optional[User]:
         with self.session as session:
             user: User = session.scalar(statement=select(User).where(User.id == user_id))

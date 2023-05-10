@@ -44,10 +44,19 @@ export interface LogsData {
 export interface SettingsData {
   api_key: string
   base_url: string
+  scheduled: number
   teasers: Array<string>
 }
 
 export interface LikesData {
   likes_remaining: number
   rate_limited_until: string
+}
+
+export interface SettingsOtherData {
+  additionalDescription?: string
+  additionalValue?: number | string
+  description: string
+  key: number
+  value: number
 }

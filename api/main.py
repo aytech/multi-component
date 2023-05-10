@@ -153,6 +153,7 @@ def get_settings():
     return make_response(jsonify({
         'api_key': storage_session.get_api_key(),
         'base_url': storage_session.get_base_url(),
+        'scheduled': storage_session.get_scheduled(),
         'teasers': storage_session.get_teasers(),
     }), requests.status_codes.codes.ok)
 
