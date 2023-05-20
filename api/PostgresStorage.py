@@ -10,6 +10,7 @@ from db.dao import UserDao, PhotoDao
 from db.models import User, Log, Settings
 from utilities.LogContext import LogContext
 from utilities.LogLevel import LogLevel
+from utilities.Status import Status
 
 
 class PostgresStorage:
@@ -40,11 +41,11 @@ class PostgresStorage:
 
     def list_users(self, status: str, page: int, page_size: int = 10) -> list[dict]:
         statement: Select = select(User).filter(User.visible)
-        if status == 'liked':
+        if status == Status.liked:
             statement = statement.filter(User.liked)
-        elif status == 'scheduled':
+        elif status == Status.scheduled:
             statement = statement.filter(User.scheduled)
-        elif status == 'new':
+        elif status == Status.new:
             statement = statement.filter(User.liked.is_(False), User.scheduled.is_(False))
         # paginate
         statement = statement.order_by(User.created.desc()).offset((page - 1) * page_size).limit(page_size)
@@ -55,23 +56,38 @@ class PostgresStorage:
         statement: Select = select(User).where(User.visible).filter(User.id.in_(ids)).order_by(User.created.desc())
         return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
-    def search_users(self, name_partial: str, page: int = 1, size: int = 10):
-        statement: Select = select(User).where(User.name.like('%{}%'.format(name_partial))).order_by(
-            User.created.desc()).offset((page - 1) * size).limit(size)
+    def search_users(self, name_partial: str, page: int = 1, size: int = 10, status: str = None):
+        statement: Select = select(User).where(User.name.ilike('%{}%'.format(name_partial)))
+        if status == Status.liked:
+            statement = statement.filter(User.visible, User.liked)
+        elif status == Status.scheduled:
+            statement = statement.filter(User.visible, User.scheduled)
+        elif status == Status.new:
+            statement = statement.filter(User.visible, User.scheduled.is_(False), User.liked.is_(False))
+        statement = statement.order_by(User.created.desc()).offset((page - 1) * size).limit(size)
         return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
     def fetch_all_users_count(self, status: str) -> int:
-        if status == 'liked':
+        if status == Status.liked:
             return self.session.query(func.count(User.id)).filter(User.visible, User.liked).scalar()
-        elif status == 'scheduled':
+        elif status == Status.scheduled:
             return self.session.query(func.count(User.id)).filter(User.visible, User.scheduled).scalar()
-        elif status == 'new':
+        elif status == Status.new:
             return self.session.query(func.count(User.id)).filter(User.visible, User.scheduled.is_(False),
                                                                   User.liked.is_(False)).scalar()
         return self.session.query(func.count(User.id)).where(User.visible).scalar()
 
-    def fetch_filtered_users_count(self, name_partial: str):
-        return self.session.query(func.count(User.id)).where(User.name.like('%{}%'.format(name_partial))).scalar()
+    def fetch_filtered_users_count(self, name_partial: str, status: str):
+        if status == Status.liked:
+            query = self.session.query(func.count(User.id)).filter(User.visible, User.liked)
+        elif status == Status.scheduled:
+            query = self.session.query(func.count(User.id)).filter(User.visible, User.scheduled)
+        elif status == Status.new:
+            query = self.session.query(func.count(User.id)).filter(User.visible, User.scheduled.is_(False),
+                                                                   User.liked.is_(False))
+        else:
+            query = self.session.query(func.count(User.id))
+        return query.where(User.name.ilike('%{}%'.format(name_partial))).scalar()
 
     def fetch_user_by_id(self, user_id: int) -> User:
         return self.session.scalars(statement=select(User).where(User.id == user_id)).one()

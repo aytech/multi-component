@@ -42,14 +42,16 @@ def get_users():
 def search_users(name: str):
     page: int = 1
     size: int = 10
+    status: Optional[str] = None
     try:
         page = int(request.args.get('page', default=1))
         size = int(request.args.get('size', default=10))
+        status = request.args.get('status')
     except ValueError:
         pass
     return make_response(jsonify({
-        'users': storage_session.search_users(name_partial=name, page=page, size=size),
-        'total': storage_session.fetch_filtered_users_count(name_partial=name)
+        'users': storage_session.search_users(name_partial=name, page=page, size=size, status=status),
+        'total': storage_session.fetch_filtered_users_count(name_partial=name, status=status)
     }))
 
 
