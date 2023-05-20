@@ -4,7 +4,7 @@ import os
 from typing import Optional
 
 from sqlalchemy import create_engine, Select, select, func, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 
 from db.dao import UserDao, PhotoDao
 from db.models import User, Log, Settings
@@ -64,29 +64,33 @@ class PostgresStorage:
             statement = statement.filter(User.visible, User.scheduled)
         elif status == Status.new:
             statement = statement.filter(User.visible, User.scheduled.is_(False), User.liked.is_(False))
+        else:
+            statement = statement.filter(User.visible)
         statement = statement.order_by(User.created.desc()).offset((page - 1) * size).limit(size)
         return [self.get_user_dict(user) for user in self.session.scalars(statement=statement).all()]
 
     def fetch_all_users_count(self, status: str) -> int:
+        query: Query = self.session.query(func.count(User.id))
         if status == Status.liked:
-            return self.session.query(func.count(User.id)).filter(User.visible, User.liked).scalar()
+            query = query.filter(User.visible, User.liked)
         elif status == Status.scheduled:
-            return self.session.query(func.count(User.id)).filter(User.visible, User.scheduled).scalar()
+            query = query.filter(User.visible, User.scheduled)
         elif status == Status.new:
-            return self.session.query(func.count(User.id)).filter(User.visible, User.scheduled.is_(False),
-                                                                  User.liked.is_(False)).scalar()
-        return self.session.query(func.count(User.id)).where(User.visible).scalar()
+            query = query.filter(User.visible, User.scheduled.is_(False), User.liked.is_(False))
+        else:
+            query = query.filter(User.visible)
+        return query.scalar()
 
     def fetch_filtered_users_count(self, name_partial: str, status: str):
+        query: Query = self.session.query(func.count(User.id))
         if status == Status.liked:
-            query = self.session.query(func.count(User.id)).filter(User.visible, User.liked)
+            query = query.filter(User.visible, User.liked)
         elif status == Status.scheduled:
-            query = self.session.query(func.count(User.id)).filter(User.visible, User.scheduled)
+            query = query.filter(User.visible, User.scheduled)
         elif status == Status.new:
-            query = self.session.query(func.count(User.id)).filter(User.visible, User.scheduled.is_(False),
-                                                                   User.liked.is_(False))
+            query = query.filter(User.visible, User.scheduled.is_(False), User.liked.is_(False))
         else:
-            query = self.session.query(func.count(User.id))
+            query = query.filter(User.visible)
         return query.where(User.name.ilike('%{}%'.format(name_partial))).scalar()
 
     def fetch_user_by_id(self, user_id: int) -> User:

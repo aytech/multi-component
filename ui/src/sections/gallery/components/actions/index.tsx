@@ -27,7 +27,7 @@ export const Actions = ( {
       <Col className="text-center" xs={ disliking || hiding ? 6 : liking ? 12 : 8 }>
         <Button
           className="btn-green"
-          disabled={ scheduled }
+          disabled={ scheduled || liked }
           loading={ liking }
           onClick={ like }
           type="primary">
@@ -38,7 +38,7 @@ export const Actions = ( {
       </Col>
       <Col className="text-center" xs={ liking || hiding ? 6 : disliking ? 12 : 8 }>
         <Button
-          disabled={ liked }
+          disabled={ !scheduled }
           loading={ disliking }
           onClick={ dislike }
           type="primary">
@@ -50,6 +50,7 @@ export const Actions = ( {
       <Col className="text-center" xs={ liking || disliking ? 6 : hiding ? 12 : 8 }>
         <Button
           danger
+          disabled={ liked || scheduled }
           loading={ hiding }
           onClick={ hide }
           type="primary">
