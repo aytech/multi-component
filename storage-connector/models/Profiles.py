@@ -55,9 +55,10 @@ class User(Base):
         if self.birth_date is None:
             return 0
         try:
-            birth_date: datetime = datetime.datetime.strptime(str(self.birth_date), '%d %b, %Y')
+            birth_date: datetime = datetime.datetime.strptime(str(self.birth_date), '%d %B, %Y')
             return int((datetime.datetime.now() - birth_date).days / 365)
-        except ValueError:
+        except ValueError as e:
+            print('Critical error: %s' % e)
             return 0
 
     def get_created(self):
