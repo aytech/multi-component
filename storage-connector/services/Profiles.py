@@ -1,23 +1,22 @@
-import os
-import sys
 import datetime
+import sys
 
 import grpc
-from sqlalchemy import create_engine, Select, select, func
+from sqlalchemy import Select, select, func
 from sqlalchemy.orm import Session, Query
 
 from enums.LogContext import LogContext
 from enums.LogLevel import LogLevel
+from enums.Status import Status
 from models.Log import Log
 from models.Profiles import User
-from protos import connector_pb2, connector_pb2_grpc
-from enums.Status import Status
-from protos.connector_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest
+from protos.profiles_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest
+from protos.profiles_pb2_grpc import ProfilesServicer
 
 sys.path.append('..')
 
 
-class Profiler(connector_pb2_grpc.ConnectorServicer):
+class Profiles(ProfilesServicer):
     session: Session
 
     @staticmethod
@@ -65,7 +64,7 @@ class Profiler(connector_pb2_grpc.ConnectorServicer):
             query = query.filter(User.visible)
         return query.where(User.name.ilike('%{}%'.format(name_partial))).scalar()
 
-    def FetchProfiles(self, request: ProfilesRequest, context: grpc.ServicerContext) -> connector_pb2.ProfilesReply:
+    def FetchProfiles(self, request: ProfilesRequest, context: grpc.ServicerContext) -> ProfilesReply:
         statement: Select = select(User).filter(User.visible)
         if request.status == Status.liked:
             statement = statement.filter(User.liked)
@@ -84,7 +83,7 @@ class Profiler(connector_pb2_grpc.ConnectorServicer):
             )
         )
 
-    def SearchProfiles(self, request: ProfilesSearchRequest, _context) -> connector_pb2.ProfilesReply:
+    def SearchProfiles(self, request: ProfilesSearchRequest, context: grpc.ServicerContext) -> ProfilesReply:
         self.log_message(
             message='Parameters received: value: %s, status: %s, page: %s, page_size: %s' % (
                 request.value, request.status, request.page, request.page_size),
@@ -121,12 +120,5 @@ class Profiler(connector_pb2_grpc.ConnectorServicer):
                 ))
                 session.commit()
 
-    def __init__(self):
-        engine = create_engine('postgresql+psycopg://%s:%s@%s:%s/%s' % (
-            os.environ.get('POSTGRES_USER'),
-            os.environ.get('POSTGRES_PASSWORD'),
-            os.environ.get('POSTGRES_HOST'),
-            os.environ.get('POSTGRES_PORT'),
-            os.environ.get('POSTGRES_DB'),
-        ))
-        self.session = Session(engine)
+    def __init__(self, session: Session):
+        self.session = session

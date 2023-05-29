@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from protos import connector_pb2 as protos_dot_connector__pb2
+from protos import profiles_pb2 as protos_dot_profiles__pb2
 
 
-class ConnectorStub(object):
+class ProfilesStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,18 +15,18 @@ class ConnectorStub(object):
             channel: A grpc.Channel.
         """
         self.FetchProfiles = channel.unary_unary(
-                '/Connector/FetchProfiles',
-                request_serializer=protos_dot_connector__pb2.ProfilesRequest.SerializeToString,
-                response_deserializer=protos_dot_connector__pb2.ProfilesReply.FromString,
+                '/Profiles/FetchProfiles',
+                request_serializer=protos_dot_profiles__pb2.ProfilesRequest.SerializeToString,
+                response_deserializer=protos_dot_profiles__pb2.ProfilesReply.FromString,
                 )
         self.SearchProfiles = channel.unary_unary(
-                '/Connector/SearchProfiles',
-                request_serializer=protos_dot_connector__pb2.ProfilesSearchRequest.SerializeToString,
-                response_deserializer=protos_dot_connector__pb2.ProfilesReply.FromString,
+                '/Profiles/SearchProfiles',
+                request_serializer=protos_dot_profiles__pb2.ProfilesSearchRequest.SerializeToString,
+                response_deserializer=protos_dot_profiles__pb2.ProfilesReply.FromString,
                 )
 
 
-class ConnectorServicer(object):
+class ProfilesServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def FetchProfiles(self, request, context):
@@ -42,26 +42,26 @@ class ConnectorServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_ConnectorServicer_to_server(servicer, server):
+def add_ProfilesServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'FetchProfiles': grpc.unary_unary_rpc_method_handler(
                     servicer.FetchProfiles,
-                    request_deserializer=protos_dot_connector__pb2.ProfilesRequest.FromString,
-                    response_serializer=protos_dot_connector__pb2.ProfilesReply.SerializeToString,
+                    request_deserializer=protos_dot_profiles__pb2.ProfilesRequest.FromString,
+                    response_serializer=protos_dot_profiles__pb2.ProfilesReply.SerializeToString,
             ),
             'SearchProfiles': grpc.unary_unary_rpc_method_handler(
                     servicer.SearchProfiles,
-                    request_deserializer=protos_dot_connector__pb2.ProfilesSearchRequest.FromString,
-                    response_serializer=protos_dot_connector__pb2.ProfilesReply.SerializeToString,
+                    request_deserializer=protos_dot_profiles__pb2.ProfilesSearchRequest.FromString,
+                    response_serializer=protos_dot_profiles__pb2.ProfilesReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Connector', rpc_method_handlers)
+            'Profiles', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class Connector(object):
+class Profiles(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -75,9 +75,9 @@ class Connector(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Connector/FetchProfiles',
-            protos_dot_connector__pb2.ProfilesRequest.SerializeToString,
-            protos_dot_connector__pb2.ProfilesReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Profiles/FetchProfiles',
+            protos_dot_profiles__pb2.ProfilesRequest.SerializeToString,
+            protos_dot_profiles__pb2.ProfilesReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -92,8 +92,8 @@ class Connector(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Connector/SearchProfiles',
-            protos_dot_connector__pb2.ProfilesSearchRequest.SerializeToString,
-            protos_dot_connector__pb2.ProfilesReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Profiles/SearchProfiles',
+            protos_dot_profiles__pb2.ProfilesSearchRequest.SerializeToString,
+            protos_dot_profiles__pb2.ProfilesReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
