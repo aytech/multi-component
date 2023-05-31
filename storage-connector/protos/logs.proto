@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+service Logs {
+    rpc FetchLogs (LogsRequest) returns (LogsReply) {}
+}
+
+message LogsRequest {
+    optional int32 from_log = 1;
+    optional int32 to_log = 2;
+}
+
+message LogsReply {
+    message Log {
+        string context = 1;
+        string created = 2;
+        string level = 3;
+        string text = 4;
+    }
+    repeated Log logs = 1;
+}

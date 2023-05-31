@@ -1,15 +1,16 @@
 syntax = "proto3";
 
 service Actions {
-    rpc ScheduleLike (LikeRequest) returns (LikeReply) {}
-    rpc UnScheduleLike (LikeRequest) returns (LikeReply) {}
+    rpc ScheduleLike (ActionsRequest) returns (ActionsReply) {}
+    rpc UnScheduleLike (ActionsRequest) returns (ActionsReply) {}
+    rpc HideProfile (ActionsRequest) returns (ActionsReply) {}
 }
 
-message LikeRequest {
+message ActionsRequest {
     int32 user_id = 1;
 }
 
-message LikeReply {
+message ActionsReply {
     bool success = 1;
     string message = 2;
 }

@@ -1,4 +1,3 @@
-import datetime
 import sys
 
 import grpc
@@ -6,18 +5,16 @@ from sqlalchemy import Select, select, func
 from sqlalchemy.orm import Session, Query
 
 from enums.LogContext import LogContext
-from enums.LogLevel import LogLevel
 from enums.Status import Status
-from models.Log import Log
 from models.Profiles import User
 from protos.profiles_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest
 from protos.profiles_pb2_grpc import ProfilesServicer
+from services.BaseService import BaseService
 
 sys.path.append('..')
 
 
-class Profiles(ProfilesServicer):
-    session: Session
+class Profiles(ProfilesServicer, BaseService):
 
     @staticmethod
     def get_profile(user: User) -> ProfilesReply.Profile:
@@ -106,19 +103,3 @@ class Profiles(ProfilesServicer):
                 total=self.fetch_filtered_users_count(request.value, request.status)
             )
         )
-
-    def log_message(self, message: str, context: LogContext, level: LogLevel = LogLevel.DEBUG):
-        if level == LogLevel.DEBUG:
-            print('[DEBUG]: %s' % message)
-        else:
-            with self.session as session:
-                session.add(Log(
-                    context=context,
-                    created=datetime.datetime.now(),
-                    level=level,
-                    text=message,
-                ))
-                session.commit()
-
-    def __init__(self, session: Session):
-        self.session = session
