@@ -1,21 +1,23 @@
 import json
 import os
-import grpc
 from typing import Optional
 
+import grpc
 import requests as requests
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from flask_restful import Api
 from google.protobuf.json_format import MessageToJson
 
+import protos.actions_pb2_grpc
+import protos.logs_pb2_grpc
 import protos.profiles_pb2_grpc
-from protos.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
 from PostgresStorage import PostgresStorage
-from db.dao import RemainingLikesDao, UserDao
-from db.models import User
+from db.dao import RemainingLikesDao
+from protos.actions_pb2 import ActionsRequest, ActionsReply
+from protos.logs_pb2 import LogsRequest, LogsReply
+from protos.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
 from routes import app_routes
-from utilities.Logs import Logs
 from utilities.Request import Request
 from utilities.Results import Results
 
@@ -41,7 +43,7 @@ def get_users():
     except ValueError:
         pass
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
-        stub = protos.profiles_pb2_grpc.ConnectorStub(channel=channel)
+        stub = protos.profiles_pb2_grpc.ProfilesStub(channel=channel)
         response = stub.FetchProfiles(ProfilesRequest(status=status, page=page, page_size=page_size))
         return make_response(MessageToJson(response.reply), requests.status_codes.codes.ok)
 
@@ -58,84 +60,80 @@ def search_users(name: str):
     except ValueError:
         pass
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
-        stub = protos.profiles_pb2_grpc.ConnectorStub(channel=channel)
+        stub = protos.profiles_pb2_grpc.ProfilesStub(channel=channel)
         response = stub.SearchProfiles(ProfilesSearchRequest(value=name, status=status, page=page, page_size=size))
         return make_response(MessageToJson(response.reply), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['LIKE_USER'], methods=['POST'])
 def like_user(user_id: int):
-    result: Optional[User] = storage_session.schedule_like(user_id=user_id)
-    status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
-    return make_response(jsonify({
-        'message': 'User scheduled for like' if result is not None else 'User already scheduled or liked'
-    }), status)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.actions_pb2_grpc.ActionsStub(channel=channel)
+        response = stub.ScheduleLike(ActionsRequest(user_id=user_id))
+        return make_response(MessageToJson(response), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['DISLIKE_USER'], methods=['POST'])
 def dislike_user(user_id: int):
-    result: Optional[User] = storage_session.unschedule_like(user_id=user_id)
-    status = requests.status_codes.codes.ok if result is not None else requests.status_codes.codes.bad_request
-    return make_response(jsonify({
-        'message': 'User unscheduled' if result is not None else 'User not scheduled'
-    }), status)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.actions_pb2_grpc.ActionsStub(channel=channel)
+        response = stub.UnScheduleLike(ActionsRequest(user_id=user_id))
+        return make_response(MessageToJson(response), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['HIDE_USER'], methods=['POST'])
 def hide_user(user_id: int):
-    hidden_user: Optional[UserDao] = storage_session.hide_user(user_id=user_id)
-    response_code: int = requests.status_codes.codes.ok
-    if hidden_user is not None:
-        app_request.pass_profile(user=hidden_user)
-    else:
-        response_code = requests.status_codes.codes.bad_request
-    return make_response(jsonify({
-        'message': 'User was hidden' if hidden_user is not None else 'User not found'
-    }), response_code)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.actions_pb2_grpc.ActionsStub(channel=channel)
+        response: ActionsReply = stub.HideProfile(ActionsRequest(user_id=user_id))
+        if response.success:
+            app_request.pass_profile(user_id=user_id, s_number=response.s_number)
+            return make_response(MessageToJson(response), requests.status_codes.codes.ok)
+        return make_response(MessageToJson(response), requests.status_codes.codes.bad_request)
 
 
 @app.route(app_routes['GET_LOGS'], methods=['GET'])
 def get_logs():
-    return make_response(jsonify({
-        'logs': [log.to_dict() for log in Logs(storage=storage_session).get_logs_chunk()],
-    }), requests.status_codes.codes.ok)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.logs_pb2_grpc.LogsStub(channel=channel)
+        response: LogsReply = stub.FetchLogs(LogsRequest())
+        return make_response(MessageToJson(response), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['GET_ARCHIVE_LOGS'], methods=['GET'])
 def get_archive_logs():
-    logs: list[dict] = []
-    try:
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.logs_pb2_grpc.LogsStub(channel=channel)
         from_log = request.args.get('from')
         if from_log is not None:
-            logs = [log.to_dict() for log in Logs(storage=storage_session).get_archive_logs(from_log=int(from_log))]
-    except ValueError:
-        pass
-    return make_response(jsonify({'logs': logs}), requests.status_codes.codes.ok)
+            response: LogsReply = stub.FetchLogs(LogsRequest(from_log=int(from_log)))
+            if len(response.logs) > 0:
+                return make_response(MessageToJson(response), requests.status_codes.codes.ok)
+        return make_response(jsonify({'logs': []}), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['GET_TAIL_LOGS'], methods=['GET'])
 def get_tail_logs():
-    logs: list[dict] = []
-    try:
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.logs_pb2_grpc.LogsStub(channel=channel)
         to_log = request.args.get('to')
         if to_log is not None:
-            logs = [log.to_dict() for log in Logs(storage=storage_session).get_latest_logs(to_log=int(to_log))]
-    except ValueError:
-        pass
-    return make_response(jsonify({'logs': logs}), requests.status_codes.codes.ok)
+            response: LogsReply = stub.FetchLogs(LogsRequest(to_log=int(to_log)))
+            if len(response.logs) > 0:
+                return make_response(MessageToJson(response), requests.status_codes.codes.ok)
+        return make_response(jsonify({'logs': []}), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['SEARCH_LOGS'], methods=['GET'])
 def search_logs():
-    try:
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.logs_pb2_grpc.LogsStub(channel=channel)
         criteria = request.args.get('search')
         if criteria is not None:
-            return make_response(jsonify({
-                'logs': [log.to_dict() for log in Logs(storage=storage_session).search_logs(criteria=criteria)]
-            }), requests.status_codes.codes.ok)
-    except ValueError:
-        pass
-    return make_response(jsonify({'logs': []}), requests.status_codes.codes.ok)
+            response: LogsReply = stub.SearchLogs(LogsRequest(search_text=criteria))
+            if len(response.logs) > 0:
+                return make_response(MessageToJson(response), requests.status_codes.codes.ok)
+        return make_response(jsonify({'logs': []}), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['SAVE_API_TOKEN'], methods=['POST'])

@@ -1,6 +1,5 @@
 import grpc
 from sqlalchemy import select, update
-from sqlalchemy.orm import Session
 
 from models.Profiles import User
 from protos.actions_pb2 import ActionsRequest, ActionsReply
@@ -41,4 +40,4 @@ class Actions(ActionsServicer, BaseService):
                 return ActionsReply(success=False, message='User not found')
             user.visible = False
             session.commit()
-            return ActionsReply(success=True, message='User %s was hidden' % user.name)
+            return ActionsReply(success=True, message='User %s was hidden' % user.name, s_number=user.s_number)

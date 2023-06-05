@@ -16,6 +16,7 @@ class Logs(LogsServicer, BaseService):
         log = LogsReply.Log(
             context=log.context,
             created=log.created.strftime('%d %b %Y %H:%M:%S'),
+            id=log.id,
             level=log.level,
             text=log.text
         )
@@ -27,9 +28,15 @@ class Logs(LogsServicer, BaseService):
         if request.from_log > 0:
             statement = statement.filter(Log.id < request.from_log)
         # Fetching live tail
-        if request.from_log > 0:
+        if request.to_log > 0:
             statement = statement.filter(Log.id > request.to_log)
         # Standard ordering
         statement = statement.order_by(Log.created.desc()).limit(limit=self.log_limit)
         self.log_message(message=str(statement), context=LogContext.SQL)
+        logs = self.session.scalars(statement=statement).all()
+        return LogsReply(logs=[self.get_log(log=log) for log in self.session.scalars(statement=statement).all()])
+
+    def SearchLogs(self, request: LogsRequest, context: grpc.ServicerContext) -> LogsReply:
+        statement: Select = select(Log).where(Log.text.like('%{}%'.format(request.search_text))).order_by(
+            Log.created.desc())
         return LogsReply(logs=[self.get_log(log=log) for log in self.session.scalars(statement=statement).all()])

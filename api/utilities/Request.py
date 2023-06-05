@@ -18,10 +18,10 @@ class Request:
     def make_api_call(self, url: str, method: str):
         return self.get_manager().request(method=method, url=url, headers=self.get_headers())
 
-    def pass_profile(self, user: UserDao):
-        url: str = 'https://%s/pass/%s' % (self.storage.get_base_url(), user.user_id)
+    def pass_profile(self, user_id: int, s_number: int):
+        url: str = 'https://%s/pass/%s' % (self.storage.get_base_url(), user_id)
         return self.get_manager().request(method='GET', url=url, headers=self.get_headers(),
-                                          fields={'s_number': user.s_number})
+                                          fields={'s_number': s_number})
 
     def __init__(self, storage: PostgresStorage):
         self.storage = storage

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-service Connector {
+service Profiles {
     rpc FetchProfiles (ProfilesRequest) returns (ProfilesReply) {}
     rpc SearchProfiles (ProfilesSearchRequest) returns (ProfilesReply) {}
 }

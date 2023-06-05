@@ -34,11 +34,17 @@ def run():
         # print('Dislike response: status: %s, message: %s' % (dislike_response.success, dislike_response.message))
         # dupl_response: LikeReply = actions_stub.UnScheduleLike(LikeRequest(user_id=33081))
         # print('Duplicate response: status: %s, message: %s' % (dupl_response.success, dupl_response.message))
-        # Logs
+        # Logs - fetch all
         logs_stub = protos.logs_pb2_grpc.LogsStub(channel=channel)
         logs_response: LogsReply = logs_stub.FetchLogs(LogsRequest())
         for log in logs_response.logs:
-            print('Log: %s' % log.created)
+            print('Log: %s - %s' % (log.id, log.text))
+        logs_chunk_response: LogsReply = logs_stub.FetchLogs(LogsRequest(from_log=60739, to_log=60737))
+        for log in logs_chunk_response.logs:
+            print('Log chunk: %s - %s' % (log.id, log.text))
+        logs_search_response: LogsReply = logs_stub.SearchLogs(LogsRequest(search_text='Zuzana'))
+        for log in logs_search_response.logs:
+            print('Log search: %s - %s' % (log.id, log.text))
 
 
 if __name__ == '__main__':
