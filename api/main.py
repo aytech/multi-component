@@ -12,11 +12,13 @@ from google.protobuf.json_format import MessageToJson
 import protos.actions_pb2_grpc
 import protos.logs_pb2_grpc
 import protos.profiles_pb2_grpc
+import protos.settings_pb2_grpc
 from PostgresStorage import PostgresStorage
 from db.dao import RemainingLikesDao
 from protos.actions_pb2 import ActionsRequest, ActionsReply
 from protos.logs_pb2 import LogsRequest, LogsReply
 from protos.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
+from protos.settings_pb2 import SettingsRequest, Empty
 from routes import app_routes
 from utilities.Request import Request
 from utilities.Results import Results
@@ -138,18 +140,16 @@ def search_logs():
 
 @app.route(app_routes['SAVE_API_TOKEN'], methods=['POST'])
 def add_or_update_token(token: str):
-    storage_session.add_update_api_key(key_value=token)
-    return make_response(jsonify({
-        'updated': True,
-    }), requests.status_codes.codes.ok)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.settings_pb2_grpc.SettingsStub(channel=channel)
+        return stub.AddUpdateApiKey(SettingsRequest(value=token))
 
 
 @app.route(app_routes['SAVE_BASE_URL'], methods=['POST'])
 def add_or_update_base_url(url: str):
-    storage_session.add_update_base_url(url_value=url)
-    return make_response(jsonify({
-        'updated': True,
-    }), requests.status_codes.codes.ok)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.settings_pb2_grpc.SettingsStub(channel=channel)
+        return stub.AddUpdateBaseUrl(SettingsRequest(value=url))
 
 
 @app.route(app_routes['SCHEDULE_LIKE'], methods=['POST'])
@@ -162,12 +162,9 @@ def schedule_like(user_id: int):
 
 @app.route(app_routes['GET_SETTINGS'], methods=['GET'])
 def get_settings():
-    return make_response(jsonify({
-        'api_key': storage_session.get_api_key(),
-        'base_url': storage_session.get_base_url(),
-        'scheduled': storage_session.get_scheduled(),
-        'teasers': storage_session.get_teasers(),
-    }), requests.status_codes.codes.ok)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.settings_pb2_grpc.SettingsStub(channel=channel)
+        return make_response(MessageToJson(stub.FetchSettings(Empty())), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['GET_SETTINGS_LIKES'], methods=['GET'])

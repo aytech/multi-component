@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+service Settings {
+    rpc AddUpdateApiKey (SettingsRequest) returns (SettingsReply) {}
+    rpc AddUpdateBaseUrl (SettingsRequest) returns (SettingsReply) {}
+    rpc FetchSettings (Empty) returns (FetchSettingsReply) {}
+}
+
+message SettingsRequest {
+    string value = 1;
+}
+
+message SettingsReply {
+    bool success = 1;
+    string message = 2;
+}
+
+message FetchSettingsReply {
+    string api_key = 1;
+    string base_url = 2;
+    int32 scheduled = 3;
+    repeated string teasers = 4;
+}
+
+message Empty {}

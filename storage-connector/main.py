@@ -9,9 +9,11 @@ from sqlalchemy.orm import Session
 import protos.actions_pb2_grpc
 import protos.logs_pb2_grpc
 import protos.profiles_pb2_grpc
+import protos.settings_pb2_grpc
 from services.Actions import Actions
 from services.Logs import Logs
 from services.Profiles import Profiles
+from services.Settings import Settings
 
 grpc_port: str = os.environ.get('GRPC_PORT', default='50051')
 pg_db: str = os.environ.get('POSTGRES_DB')
@@ -26,9 +28,10 @@ def serve():
     session: Session = Session(engine)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     # Add services
-    protos.profiles_pb2_grpc.add_ProfilesServicer_to_server(Profiles(session=session), server=server)
     protos.actions_pb2_grpc.add_ActionsServicer_to_server(Actions(session=session), server=server)
     protos.logs_pb2_grpc.add_LogsServicer_to_server(Logs(session=session), server=server)
+    protos.profiles_pb2_grpc.add_ProfilesServicer_to_server(Profiles(session=session), server=server)
+    protos.settings_pb2_grpc.add_SettingsServicer_to_server(Settings(session=session), server=server)
 
     server.add_insecure_port('[::]:' + grpc_port)
     server.start()
