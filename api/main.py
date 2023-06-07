@@ -1,4 +1,3 @@
-import json
 import os
 from typing import Optional
 
@@ -87,8 +86,8 @@ def hide_user(user_id: int):
         stub_settings = proto.settings_pb2_grpc.SettingsStub(channel=channel)
         response: ActionsReply = stub_actions.HideProfile(ActionsRequest(user_id=user_id))
         if response.success:
-            api_key: FetchSettingsValueReply = stub_settings.FetchApiKey(Empty)
-            base_url: FetchSettingsValueReply = stub_settings.FetchBaseUrl(Empty)
+            api_key: FetchSettingsValueReply = stub_settings.FetchApiKey(Empty())
+            base_url: FetchSettingsValueReply = stub_settings.FetchBaseUrl(Empty())
             app_request: Request = Request(api_key=api_key.value, base_url=base_url.value)
             app_request.pass_profile(user_id=user_id, s_number=response.s_number)
             return make_response(MessageToJson(response), requests.status_codes.codes.ok)

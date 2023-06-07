@@ -9,5 +9,5 @@ data
 api/proto/*.py
 api/proto/*.pyi
 protobuf/generated
-storage_processor/proto/*.py
-storage_processor/proto/*.pyi
+storage_connector/proto/*.py
+storage_connector/proto/*.pyi

@@ -57,7 +57,7 @@ export const Settings = ( {
     setOtherSettings( [ {
       description: 'Scheduled users',
       key: 1,
-      value: settingsData.scheduled,
+      value: settingsData.scheduled === undefined ? 0 : settingsData.scheduled,
     } ] )
     setSettingsLoading( false )
   }
