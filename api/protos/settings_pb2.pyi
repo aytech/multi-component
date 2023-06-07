@@ -21,6 +21,12 @@ class FetchSettingsReply(_message.Message):
     teasers: _containers.RepeatedScalarFieldContainer[str]
     def __init__(self, api_key: _Optional[str] = ..., base_url: _Optional[str] = ..., scheduled: _Optional[int] = ..., teasers: _Optional[_Iterable[str]] = ...) -> None: ...
 
+class FetchSettingsValueReply(_message.Message):
+    __slots__ = ["value"]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    value: str
+    def __init__(self, value: _Optional[str] = ...) -> None: ...
+
 class SettingsReply(_message.Message):
     __slots__ = ["message", "success"]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]

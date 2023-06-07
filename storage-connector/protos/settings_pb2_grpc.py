@@ -24,6 +24,16 @@ class SettingsStub(object):
                 request_serializer=protos_dot_settings__pb2.SettingsRequest.SerializeToString,
                 response_deserializer=protos_dot_settings__pb2.SettingsReply.FromString,
                 )
+        self.FetchApiKey = channel.unary_unary(
+                '/Settings/FetchApiKey',
+                request_serializer=protos_dot_settings__pb2.Empty.SerializeToString,
+                response_deserializer=protos_dot_settings__pb2.FetchSettingsValueReply.FromString,
+                )
+        self.FetchBaseUrl = channel.unary_unary(
+                '/Settings/FetchBaseUrl',
+                request_serializer=protos_dot_settings__pb2.Empty.SerializeToString,
+                response_deserializer=protos_dot_settings__pb2.FetchSettingsValueReply.FromString,
+                )
         self.FetchSettings = channel.unary_unary(
                 '/Settings/FetchSettings',
                 request_serializer=protos_dot_settings__pb2.Empty.SerializeToString,
@@ -41,6 +51,18 @@ class SettingsServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def AddUpdateBaseUrl(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def FetchApiKey(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def FetchBaseUrl(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -64,6 +86,16 @@ def add_SettingsServicer_to_server(servicer, server):
                     servicer.AddUpdateBaseUrl,
                     request_deserializer=protos_dot_settings__pb2.SettingsRequest.FromString,
                     response_serializer=protos_dot_settings__pb2.SettingsReply.SerializeToString,
+            ),
+            'FetchApiKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.FetchApiKey,
+                    request_deserializer=protos_dot_settings__pb2.Empty.FromString,
+                    response_serializer=protos_dot_settings__pb2.FetchSettingsValueReply.SerializeToString,
+            ),
+            'FetchBaseUrl': grpc.unary_unary_rpc_method_handler(
+                    servicer.FetchBaseUrl,
+                    request_deserializer=protos_dot_settings__pb2.Empty.FromString,
+                    response_serializer=protos_dot_settings__pb2.FetchSettingsValueReply.SerializeToString,
             ),
             'FetchSettings': grpc.unary_unary_rpc_method_handler(
                     servicer.FetchSettings,
@@ -111,6 +143,40 @@ class Settings(object):
         return grpc.experimental.unary_unary(request, target, '/Settings/AddUpdateBaseUrl',
             protos_dot_settings__pb2.SettingsRequest.SerializeToString,
             protos_dot_settings__pb2.SettingsReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def FetchApiKey(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Settings/FetchApiKey',
+            protos_dot_settings__pb2.Empty.SerializeToString,
+            protos_dot_settings__pb2.FetchSettingsValueReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def FetchBaseUrl(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Settings/FetchBaseUrl',
+            protos_dot_settings__pb2.Empty.SerializeToString,
+            protos_dot_settings__pb2.FetchSettingsValueReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

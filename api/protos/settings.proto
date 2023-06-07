@@ -3,6 +3,8 @@ syntax = "proto3";
 service Settings {
     rpc AddUpdateApiKey (SettingsRequest) returns (SettingsReply) {}
     rpc AddUpdateBaseUrl (SettingsRequest) returns (SettingsReply) {}
+    rpc FetchApiKey (Empty) returns (FetchSettingsValueReply) {}
+    rpc FetchBaseUrl (Empty) returns (FetchSettingsValueReply) {}
     rpc FetchSettings (Empty) returns (FetchSettingsReply) {}
 }
 
@@ -20,6 +22,10 @@ message FetchSettingsReply {
     string base_url = 2;
     int32 scheduled = 3;
     repeated string teasers = 4;
+}
+
+message FetchSettingsValueReply {
+    string value = 1;
 }
 
 message Empty {}

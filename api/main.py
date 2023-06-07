@@ -13,12 +13,11 @@ import protos.actions_pb2_grpc
 import protos.logs_pb2_grpc
 import protos.profiles_pb2_grpc
 import protos.settings_pb2_grpc
-from PostgresStorage import PostgresStorage
-from db.dao import RemainingLikesDao
+from utilities.RemainingLikesDao import RemainingLikesDao
 from protos.actions_pb2 import ActionsRequest, ActionsReply
 from protos.logs_pb2 import LogsRequest, LogsReply
 from protos.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
-from protos.settings_pb2 import SettingsRequest, Empty
+from protos.settings_pb2 import SettingsRequest, Empty, FetchSettingsValueReply
 from routes import app_routes
 from utilities.Request import Request
 from utilities.Results import Results
@@ -26,8 +25,6 @@ from utilities.Results import Results
 grpc_host: str = os.environ.get('GRPC_HOST', default='localhost')
 grpc_port: str = os.environ.get('GRPC_PORT', default='50051')
 
-storage_session: PostgresStorage = PostgresStorage()
-app_request: Request = Request(storage=storage_session)
 app = Flask(__name__)
 CORS(app)
 api = Api(app)
@@ -67,7 +64,7 @@ def search_users(name: str):
         return make_response(MessageToJson(response.reply), requests.status_codes.codes.ok)
 
 
-@app.route(app_routes['LIKE_USER'], methods=['POST'])
+@app.route(app_routes['SCHEDULE_LIKE'], methods=['POST'])
 def like_user(user_id: int):
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
         stub = protos.actions_pb2_grpc.ActionsStub(channel=channel)
@@ -86,9 +83,13 @@ def dislike_user(user_id: int):
 @app.route(app_routes['HIDE_USER'], methods=['POST'])
 def hide_user(user_id: int):
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
-        stub = protos.actions_pb2_grpc.ActionsStub(channel=channel)
-        response: ActionsReply = stub.HideProfile(ActionsRequest(user_id=user_id))
+        stub_actions = protos.actions_pb2_grpc.ActionsStub(channel=channel)
+        stub_settings = protos.settings_pb2_grpc.SettingsStub(channel=channel)
+        response: ActionsReply = stub_actions.HideProfile(ActionsRequest(user_id=user_id))
         if response.success:
+            api_key: FetchSettingsValueReply = stub_settings.FetchApiKey(Empty)
+            base_url: FetchSettingsValueReply = stub_settings.FetchBaseUrl(Empty)
+            app_request: Request = Request(api_key=api_key.value, base_url=base_url.value)
             app_request.pass_profile(user_id=user_id, s_number=response.s_number)
             return make_response(MessageToJson(response), requests.status_codes.codes.ok)
         return make_response(MessageToJson(response), requests.status_codes.codes.bad_request)
@@ -152,14 +153,6 @@ def add_or_update_base_url(url: str):
         return stub.AddUpdateBaseUrl(SettingsRequest(value=url))
 
 
-@app.route(app_routes['SCHEDULE_LIKE'], methods=['POST'])
-def schedule_like(user_id: int):
-    storage_session.schedule_like(user_id=user_id)
-    return make_response(jsonify({
-        'scheduled': True,
-    }), requests.status_codes.codes.ok)
-
-
 @app.route(app_routes['GET_SETTINGS'], methods=['GET'])
 def get_settings():
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
@@ -169,18 +162,23 @@ def get_settings():
 
 @app.route(app_routes['GET_SETTINGS_LIKES'], methods=['GET'])
 def get_likes_remaining():
-    url: str = 'https://%s/v2/profile?include=likes' % storage_session.get_base_url()
-    response = app_request.make_api_call(url=url, method='GET')
-    if response.status == requests.status_codes.codes.unauthorized:
-        return make_response(jsonify({
-            'message': 'Unauthorized',
-        }), requests.status_codes.codes.unauthorized)
-    if response.status == requests.status_codes.codes.forbidden:
-        return make_response(jsonify({
-            'message': 'Forbidden',
-        }), requests.status_codes.codes.forbidden)
-    likes: RemainingLikesDao = Results.remaining_likes(json_data=json.loads(response.data.decode('utf-8')))
-    return make_response(jsonify(likes.to_dict()), requests.status_codes.codes.ok)
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = protos.settings_pb2_grpc.SettingsStub(channel=channel)
+        api_key: FetchSettingsValueReply = stub.FetchApiKey(Empty)
+        base_url: FetchSettingsValueReply = stub.FetchBaseUrl(Empty)
+        app_request: Request = Request(api_key=api_key.value, base_url=base_url.value)
+        url: str = 'https://%s/v2/profile?include=likes' % base_url.value
+        response = app_request.make_api_call(url=url, method='GET')
+        if response.status == requests.status_codes.codes.unauthorized:
+            return make_response(jsonify({
+                'message': 'Unauthorized',
+            }), requests.status_codes.codes.unauthorized)
+        if response.status == requests.status_codes.codes.forbidden:
+            return make_response(jsonify({
+                'message': 'Forbidden',
+            }), requests.status_codes.codes.forbidden)
+        likes: RemainingLikesDao = Results.remaining_likes(json_data=json.loads(response.data.decode('utf-8')))
+        return make_response(jsonify(likes.to_dict()), requests.status_codes.codes.ok)
 
 
 if __name__ == '__main__':

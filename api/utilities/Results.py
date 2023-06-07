@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db.dao import RemainingLikesDao
+from utilities.RemainingLikesDao import RemainingLikesDao
 from errors.GenericError import GenericError
 from errors.TimeoutReceivedError import TimeoutReceivedError
 

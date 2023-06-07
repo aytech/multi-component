@@ -6,7 +6,7 @@ from sqlalchemy import Select, select, func
 
 from models.Profiles import User
 from protos.settings_pb2_grpc import SettingsServicer
-from protos.settings_pb2 import SettingsRequest, SettingsReply, Empty, FetchSettingsReply
+from protos.settings_pb2 import SettingsRequest, SettingsReply, Empty, FetchSettingsReply, FetchSettingsValueReply
 from services.BaseService import BaseService
 
 from models.Settings import Settings as SettingsModel
@@ -66,3 +66,8 @@ class Settings(SettingsServicer, BaseService):
             teasers=self.get_teasers()
         )
 
+    def FetchApiKey(self, request: Empty, context: grpc.ServicerContext) -> FetchSettingsValueReply:
+        return FetchSettingsValueReply(value=self.get_api_key().value)
+
+    def FetchBaseUrl(self, request: Empty, context: grpc.ServicerContext) -> FetchSettingsValueReply:
+        return FetchSettingsValueReply(value=self.get_base_url().value)
