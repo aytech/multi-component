@@ -3,8 +3,8 @@ from sqlalchemy import Select, select
 
 from enums.LogContext import LogContext
 from models.Log import Log
-from protos.logs_pb2 import LogsRequest, LogsReply
-from protos.logs_pb2_grpc import LogsServicer
+from proto.logs_pb2 import LogsRequest, LogsReply
+from proto.logs_pb2_grpc import LogsServicer
 from services.BaseService import BaseService
 
 

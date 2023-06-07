@@ -103,6 +103,13 @@ export const Settings = ( {
     }
   }
 
+  const getMaskedApiKey = () => {
+    if (settings !== undefined && settings.apiKey !== undefined) {
+      return new Array( settings.apiKey.length ).join( "*" )
+    }
+    return ""
+  }
+
   const Teasers = () => settingsLoading ? (
     <Skeleton loading active>
       <List.Item.Meta avatar={ <Skeleton.Image /> } />
@@ -148,7 +155,7 @@ export const Settings = ( {
               </Button>
             ) }
             onChange={ ( event: any ) => setApiKey( event.target.value ) }
-            placeholder={ settings === undefined || settings.api_key === null ? "" : new Array( settings.api_key.length ).join( "*" ) }
+            placeholder={ getMaskedApiKey() }
             value={ apiKey } />
         </Col>
       </Row>
@@ -168,7 +175,7 @@ export const Settings = ( {
               </Button>
             ) }
             onChange={ ( event: any ) => setBaseUrl( event.target.value ) }
-            placeholder={ settings?.base_url }
+            placeholder={ settings?.baseUrl }
             value={ baseUrl } />
         </Col>
       </Row>

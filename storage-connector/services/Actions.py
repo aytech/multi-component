@@ -2,8 +2,8 @@ import grpc
 from sqlalchemy import select, update
 
 from models.Profiles import User
-from protos.actions_pb2 import ActionsRequest, ActionsReply
-from protos.actions_pb2_grpc import ActionsServicer
+from proto.actions_pb2 import ActionsRequest, ActionsReply
+from proto.actions_pb2_grpc import ActionsServicer
 from services.BaseService import BaseService
 
 

@@ -6,10 +6,10 @@ import grpc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-import protos.actions_pb2_grpc
-import protos.logs_pb2_grpc
-import protos.profiles_pb2_grpc
-import protos.settings_pb2_grpc
+import proto.actions_pb2_grpc
+import proto.logs_pb2_grpc
+import proto.profiles_pb2_grpc
+import proto.settings_pb2_grpc
 from services.Actions import Actions
 from services.Logs import Logs
 from services.Profiles import Profiles
@@ -28,10 +28,10 @@ def serve():
     session: Session = Session(engine)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     # Add services
-    protos.actions_pb2_grpc.add_ActionsServicer_to_server(Actions(session=session), server=server)
-    protos.logs_pb2_grpc.add_LogsServicer_to_server(Logs(session=session), server=server)
-    protos.profiles_pb2_grpc.add_ProfilesServicer_to_server(Profiles(session=session), server=server)
-    protos.settings_pb2_grpc.add_SettingsServicer_to_server(Settings(session=session), server=server)
+    proto.actions_pb2_grpc.add_ActionsServicer_to_server(Actions(session=session), server=server)
+    proto.logs_pb2_grpc.add_LogsServicer_to_server(Logs(session=session), server=server)
+    proto.profiles_pb2_grpc.add_ProfilesServicer_to_server(Profiles(session=session), server=server)
+    proto.settings_pb2_grpc.add_SettingsServicer_to_server(Settings(session=session), server=server)
 
     server.add_insecure_port('[::]:' + grpc_port)
     server.start()

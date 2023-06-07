@@ -20,9 +20,9 @@ export const GalleryItem = ( {
 
   const { Meta } = Card
 
-  const [ dislikeLoading, setDislikeLoading ] = useState<boolean>( false )
+  const [ unscheduleLoading, setUnscheduleLoading ] = useState<boolean>( false )
   const [ hideLoading, setHideLoading ] = useState<boolean>( false )
-  const [ likeLoading, setLikeLoading ] = useState<boolean>( false )
+  const [ scheduleLoading, setScheduleLoading ] = useState<boolean>( false )
 
   const makeRequest = async ( url: string, callback: () => void ) => {
     try {
@@ -40,23 +40,23 @@ export const GalleryItem = ( {
     callback()
   }
 
-  const likeProfile = async ( profileId: number ) => {
-    setLikeLoading( true )
-    makeRequest( `/api/users/${ profileId }/like`, () => {
-      setLikeLoading( false )
+  const scheduleProfile = async ( profileId: number ) => {
+    setScheduleLoading( true )
+    makeRequest( `/api/users/schedule/${profileId}`, () => {
+      setScheduleLoading( false )
     } )
   }
 
-  const dislikeProfile = async ( profileId: number ) => {
-    setDislikeLoading( true )
-    makeRequest( `/api/users/${ profileId }/dislike`, () => {
-      setDislikeLoading( false )
+  const unscheduleProfile = async ( profileId: number ) => {
+    setUnscheduleLoading( true )
+    makeRequest( `/api/users/unschedule/${profileId}`, () => {
+      setUnscheduleLoading( false )
     } )
   }
 
   const hideProfile = async ( profileId: number ) => {
     setHideLoading( true )
-    makeRequest( `/api/users/${ profileId }/hide`, () => {
+    makeRequest( `/api/users/${profileId}/hide`, () => {
       setHideLoading( false )
     } )
   }
@@ -103,7 +103,7 @@ export const GalleryItem = ( {
             ) ) }
           </Carousel>
         }>
-        <Meta title={ `${ profile.name } (${ profile.age })` } description={ (
+        <Meta title={ `${profile.name} (${profile.age})` } description={ (
           <>
             <Row className="description-row">
               <Col xs={ 8 }>Status:</Col>
@@ -125,20 +125,20 @@ export const GalleryItem = ( {
             </Row>
             <Row className="description-row actions">
               <Actions
-                dislike={ () => {
-                  dislikeProfile( profile.id )
-                } }
-                disliking={ dislikeLoading }
                 hide={ () => {
                   hideProfile( profile.id )
                 } }
                 hiding={ hideLoading }
-                like={ () => {
-                  likeProfile( profile.id )
+                schedule={ () => {
+                  scheduleProfile( profile.id )
                 } }
                 liked={ profile.liked }
-                liking={ likeLoading }
-                scheduled={ profile.scheduled } />
+                scheduling={ scheduleLoading }
+                scheduled={ profile.scheduled }
+                unschedule={ () => {
+                  unscheduleProfile( profile.id )
+                } }
+                unscheduling={ unscheduleLoading } />
             </Row>
           </>
         ) }></Meta>

@@ -5,8 +5,8 @@ import grpc
 from sqlalchemy import Select, select, func
 
 from models.Profiles import User
-from protos.settings_pb2_grpc import SettingsServicer
-from protos.settings_pb2 import SettingsRequest, SettingsReply, Empty, FetchSettingsReply, FetchSettingsValueReply
+from proto.settings_pb2_grpc import SettingsServicer
+from proto.settings_pb2 import SettingsRequest, SettingsReply, Empty, FetchSettingsReply, FetchSettingsValueReply
 from services.BaseService import BaseService
 
 from models.Settings import Settings as SettingsModel

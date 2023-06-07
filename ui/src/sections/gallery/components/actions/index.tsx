@@ -2,52 +2,52 @@ import { DislikeOutlined, LikeOutlined, StopOutlined } from "@ant-design/icons"
 import { Button, Col, Tooltip } from "antd"
 
 interface Props {
-  dislike: () => void
-  disliking: boolean
   hide: () => void
   hiding: boolean
-  like: () => void
   liked: boolean
-  liking: boolean
+  schedule: () => void
   scheduled: boolean
+  scheduling: boolean
+  unschedule: () => void,
+  unscheduling: boolean
 }
 
 export const Actions = ( {
-  dislike,
-  disliking,
   hide,
   hiding,
-  like,
   liked,
-  liking,
-  scheduled
+  schedule,
+  scheduled,
+  scheduling,
+  unschedule,
+  unscheduling
 }: Props ) => {
   return (
     <>
-      <Col className="text-center" xs={ disliking || hiding ? 6 : liking ? 12 : 8 }>
+      <Col className="text-center" xs={ unscheduling || hiding ? 6 : scheduling ? 12 : 8 }>
         <Button
           className="btn-green"
           disabled={ scheduled || liked }
-          loading={ liking }
-          onClick={ like }
+          loading={ scheduling }
+          onClick={ schedule }
           type="primary">
           <Tooltip title="Like">
             <LikeOutlined />
           </Tooltip>
         </Button>
       </Col>
-      <Col className="text-center" xs={ liking || hiding ? 6 : disliking ? 12 : 8 }>
+      <Col className="text-center" xs={ scheduling || hiding ? 6 : unscheduling ? 12 : 8 }>
         <Button
           disabled={ !scheduled }
-          loading={ disliking }
-          onClick={ dislike }
+          loading={ unscheduling }
+          onClick={ unschedule }
           type="primary">
           <Tooltip title="Dislike">
             <DislikeOutlined />
           </Tooltip>
         </Button>
       </Col>
-      <Col className="text-center" xs={ liking || disliking ? 6 : hiding ? 12 : 8 }>
+      <Col className="text-center" xs={ scheduling || unscheduling ? 6 : hiding ? 12 : 8 }>
         <Button
           danger
           disabled={ liked || scheduled }

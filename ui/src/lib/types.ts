@@ -42,8 +42,8 @@ export interface LogsData {
 }
 
 export interface SettingsData {
-  api_key: string
-  base_url: string
+  apiKey: string
+  baseUrl: string
   scheduled: number
   teasers: Array<string>
 }

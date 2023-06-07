@@ -1,16 +1,16 @@
 import logging
 import grpc
 
-import protos.actions_pb2
-import protos.actions_pb2_grpc
-import protos.logs_pb2
-import protos.logs_pb2_grpc
-import protos.profiles_pb2
-import protos.profiles_pb2_grpc
+import proto.actions_pb2
+import proto.actions_pb2_grpc
+import proto.logs_pb2
+import proto.logs_pb2_grpc
+import proto.profiles_pb2
+import proto.profiles_pb2_grpc
 
-from protos.actions_pb2 import ActionsRequest, ActionsReply
-from protos.logs_pb2 import LogsRequest, LogsReply
-from protos.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
+from proto.actions_pb2 import ActionsRequest, ActionsReply
+from proto.logs_pb2 import LogsRequest, LogsReply
+from proto.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
 
 
 def run():
@@ -20,14 +20,14 @@ def run():
     print('Trying to fetch profiles ...')
     with grpc.insecure_channel('localhost:50051') as channel:
         # Profiles
-        # profile_stub = protos.profiles_pb2_grpc.ProfilesStub(channel=channel)
+        # profile_stub = proto.profiles_pb2_grpc.ProfilesStub(channel=channel)
         # response = profile_stub.FetchProfiles(ProfilesRequest(status='new', page=1, page_size=10))
         # response = profile_stub.SearchProfiles(ProfilesSearchRequest(value='Ren', status='new', page=1, page_size=10))
         # for profile in response.reply.profiles:
         #     print('Profile received: %s' % profile.id)
         # print('Total: ', response.reply.total)
         # Actions
-        # actions_stub = protos.actions_pb2_grpc.ActionsStub(channel=channel)
+        # actions_stub = proto.actions_pb2_grpc.ActionsStub(channel=channel)
         # like_response: LikeReply = actions_stub.ScheduleLike(LikeRequest(user_id=33081))
         # print('Like response: status: %s, message: %s' % (like_response.success, like_response.message))
         # dislike_response: LikeReply = actions_stub.UnScheduleLike(LikeRequest(user_id=33081))
@@ -35,7 +35,7 @@ def run():
         # dupl_response: LikeReply = actions_stub.UnScheduleLike(LikeRequest(user_id=33081))
         # print('Duplicate response: status: %s, message: %s' % (dupl_response.success, dupl_response.message))
         # Logs - fetch all
-        logs_stub = protos.logs_pb2_grpc.LogsStub(channel=channel)
+        logs_stub = proto.logs_pb2_grpc.LogsStub(channel=channel)
         logs_response: LogsReply = logs_stub.FetchLogs(LogsRequest())
         for log in logs_response.logs:
             print('Log: %s - %s' % (log.id, log.text))

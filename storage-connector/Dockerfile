@@ -9,13 +9,16 @@ RUN apt update
 RUN apt -y upgrade
 
 RUN python -m pip install --upgrade pip
-COPY ./requirements.txt ./requirements.txt
+COPY ./storage-connector/requirements.txt ./requirements.txt
 RUN pip install -r ./requirements.txt
 
-COPY enums ./enums
-COPY models ./models
-COPY protos ./protos
-COPY services ./services
-COPY main.py ./
+COPY ./storage-connector/enums ./enums
+COPY ./storage-connector/models ./models
+COPY ./protobuf/proto ./proto
+COPY ./storage-connector/services ./services
+COPY ./storage-connector/main.py ./
+
+RUN python -m grpc_tools.protoc --proto_path=. --python_out=. --pyi_out=. --grpc_python_out=. ./proto/*.proto
+RUN pip uninstall -y grpcio-tools
 
 CMD [ "python", "main.py" ]

@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session, Query
 from enums.LogContext import LogContext
 from enums.Status import Status
 from models.Profiles import User
-from protos.profiles_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest
-from protos.profiles_pb2_grpc import ProfilesServicer
+from proto.profiles_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest
+from proto.profiles_pb2_grpc import ProfilesServicer
 from services.BaseService import BaseService
 
 sys.path.append('..')

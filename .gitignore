@@ -5,3 +5,9 @@ data
 **/.idea
 **/node_modules
 **/__pycache__
+
+api/proto/*.py
+api/proto/*.pyi
+protobuf/generated
+storage_processor/proto/*.py
+storage_processor/proto/*.pyi
