@@ -1,11 +1,18 @@
 syntax = "proto3";
 
+import "proto/empty.proto";
+
 service Settings {
+    rpc AddTeaser (AddTeaserRequest) returns (Empty) {}
     rpc AddUpdateApiKey (SettingsRequest) returns (SettingsReply) {}
     rpc AddUpdateBaseUrl (SettingsRequest) returns (SettingsReply) {}
     rpc FetchApiKey (Empty) returns (FetchSettingsValueReply) {}
     rpc FetchBaseUrl (Empty) returns (FetchSettingsValueReply) {}
     rpc FetchSettings (Empty) returns (FetchSettingsReply) {}
+}
+
+message AddTeaserRequest {
+    string teaser = 1;
 }
 
 message SettingsRequest {
@@ -27,5 +34,3 @@ message FetchSettingsReply {
 message FetchSettingsValueReply {
     string value = 1;
 }
-
-message Empty {}

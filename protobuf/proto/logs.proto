@@ -1,8 +1,17 @@
 syntax = "proto3";
 
+import "proto/empty.proto";
+
 service Logs {
     rpc FetchLogs (LogsRequest) returns (LogsReply) {}
+    rpc LogMessage (LogRequest) returns (Empty) {}
     rpc SearchLogs (LogsRequest) returns (LogsReply) {}
+}
+
+message LogRequest {
+    string message = 1;
+    string context = 2;
+    string level = 3;
 }
 
 message LogsRequest {

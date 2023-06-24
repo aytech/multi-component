@@ -5,8 +5,10 @@ import grpc
 from sqlalchemy import Select, select, func
 
 from models.Profiles import User
+from proto.empty_pb2 import Empty
 from proto.settings_pb2_grpc import SettingsServicer
-from proto.settings_pb2 import SettingsRequest, SettingsReply, Empty, FetchSettingsReply, FetchSettingsValueReply
+from proto.settings_pb2 import SettingsRequest, SettingsReply, FetchSettingsReply, FetchSettingsValueReply, \
+    AddTeaserRequest
 from services.BaseService import BaseService
 
 from models.Settings import Settings as SettingsModel
@@ -31,6 +33,25 @@ class Settings(SettingsServicer, BaseService):
         if settings is None:
             return []
         return json.loads(settings.value)
+
+    def AddTeaser(self, request: AddTeaserRequest, context: grpc.ServicerContext) -> Empty:
+        statement: Select = select(SettingsModel).where(SettingsModel.name == SettingsModel.teasers_setting)
+        teaser_setting: SettingsModel = self.session.scalar(statement=statement)
+        teasers: list[str] = []
+        if teaser_setting is None:
+            teaser_setting = SettingsModel(
+                created=datetime.datetime.now(),
+                name=SettingsModel.teasers_setting,
+            )
+        else:
+            teasers = json.loads(teaser_setting.value)
+        if request.teaser not in teasers:
+            teasers.append(request.teaser)
+            teaser_setting.value = json.dumps(teasers)
+            with self.session as session:
+                session.add(teaser_setting)
+                session.commit()
+        return Empty()
 
     def AddUpdateApiKey(self, request: SettingsRequest, context: grpc.ServicerContext) -> SettingsReply:
         key: SettingsModel = self.get_api_key()

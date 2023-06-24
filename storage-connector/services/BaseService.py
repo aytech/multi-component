@@ -10,7 +10,7 @@ from models.Log import Log
 class BaseService(object):
     session: Session
 
-    def log_message(self, message: str, context: LogContext, level: LogLevel = LogLevel.DEBUG):
+    def log_message(self, message: str, context: str, level: str = LogLevel.DEBUG):
         if level == LogLevel.DEBUG:
             print('[DEBUG]: %s' % message)
         else:

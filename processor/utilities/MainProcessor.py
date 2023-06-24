@@ -1,24 +1,31 @@
 import json
+import os
 import time
 from typing import Optional
 
 import certifi
+import grpc
 import requests
 import urllib3
+import proto.logs_pb2_grpc
+import proto.settings_pb2_grpc
 
-from db.PostgresStorage import PostgresStorage
+from proto.empty_pb2 import Empty
+from proto.logs_pb2 import LogRequest
+from proto.settings_pb2 import AddTeaserRequest, FetchSettingsReply
 from db.dao import UserDao, UserTeaserDao, RemainingLikesDao, LikesResponseDao
-from utilities.LogLevel import LogLevel
 from utilities.Results import Results
 from utilities.errors.AuthorizationError import AuthorizationError
 from utilities.errors.BaseError import BaseError
+
+grpc_host: str = os.environ.get('GRPC_HOST', default='localhost')
+grpc_port: str = os.environ.get('GRPC_PORT', default='50051')
 
 
 class MainProcessor:
     base_url: str
     pool_manager: urllib3.PoolManager
     request_headers: dict
-    storage: PostgresStorage
 
     def get_batch_profile_data(self) -> list[UserDao]:
         time.sleep(5)  # wait before getting next batch, as it will be invoked in loop
@@ -119,15 +126,22 @@ class MainProcessor:
 
     def collect_teaser(self):
         teaser: Optional[UserTeaserDao] = None
-        try:
-            teaser = self.get_teaser_profile()
-        except AuthorizationError:
-            self.storage.add_message("Authorization error while fetching teaser profile", LogLevel.WARN)
-        if teaser is not None:
-            self.storage.add_teaser(teaser=teaser.name)
+        with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+            try:
+                teaser = self.get_teaser_profile()
+            except AuthorizationError:
+                stub = proto.logs_pb2_grpc.LogsStub(channel=channel)
+                stub.LogMessage(
+                    LogRequest(message="Authorization error while fetching teaser profile", context="PROCESSOR",
+                               level="TRACE"))
+            if teaser is not None:
+                stub = proto.settings_pb2_grpc.SettingsStub(channel=channel)
+                stub.AddTeaser(AddTeaserRequest(teaser=teaser.name))
 
-    def __init__(self, storage: PostgresStorage):
-        self.base_url = 'https://%s' % storage.get_base_url()
-        self.storage = storage
-        self.request_headers = {'X-Auth-Token': storage.get_api_key(), 'Host': storage.get_base_url()}
-        self.pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+    def __init__(self):
+        with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+            stub = proto.settings_pb2_grpc.SettingsStub(channel=channel)
+            settings: FetchSettingsReply = stub.FetchSettings(Empty())
+            self.base_url = 'https://%s' % settings.base_url
+            self.request_headers = {'X-Auth-Token': settings.api_key, 'Host': settings.base_url}
+            self.pool_manager = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
