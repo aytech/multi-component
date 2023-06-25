@@ -1,17 +1,54 @@
 syntax = "proto3";
 
 service Actions {
+    rpc AddProfile (AddProfileRequest) returns (AddProfileReply) {}
+    rpc HideProfile (ActionsRequest) returns (ActionsReply) {}
+    rpc RenewProfileImages (ActionsPhotoRequest) returns (ActionsReply) {}
     rpc ScheduleLike (ActionsRequest) returns (ActionsReply) {}
     rpc UnScheduleLike (ActionsRequest) returns (ActionsReply) {}
-    rpc HideProfile (ActionsRequest) returns (ActionsReply) {}
+    rpc UpdateLiked (LikedStatusRequest) returns (LikedStatusReply) {}
+}
+
+message ProfilePhoto {
+    string photo_id = 2;
+    string url = 3;
+}
+
+message AddProfileRequest {
+    string bio = 1;
+    string birth_date = 2;
+    string city = 3;
+    float distance_mi = 4;
+    string name = 5;
+    repeated ProfilePhoto photos = 6;
+    int64 s_number = 7;
+    string user_id = 8;
+}
+
+message AddProfileReply {
+
 }
 
 message ActionsRequest {
     int32 user_id = 1;
 }
 
+message ActionsPhotoRequest {
+    int32 user_id = 1;
+    repeated ProfilePhoto photos = 2;
+}
+
 message ActionsReply {
     bool success = 1;
     string message = 2;
     optional int64 s_number = 3;
+}
+
+message LikedStatusRequest {
+    bool liked = 1;
+    int32 user_id = 2;
+}
+
+message LikedStatusReply {
+    bool success = 1;
 }

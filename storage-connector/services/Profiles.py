@@ -2,12 +2,15 @@ import sys
 
 import grpc
 from sqlalchemy import Select, select, func
-from sqlalchemy.orm import Session, Query
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query
 
 from enums.LogContext import LogContext
 from enums.Status import Status
 from models.Profiles import User
-from proto.profiles_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest
+from proto.empty_pb2 import Empty
+from proto.profiles_pb2 import ProfilesReply, ProfilesRequest, ProfilesSearchRequest, ProfileUserIdRequest, \
+    ProfileIdReply
 from proto.profiles_pb2_grpc import ProfilesServicer
 from services.BaseService import BaseService
 
@@ -19,12 +22,12 @@ class Profiles(ProfilesServicer, BaseService):
     @staticmethod
     def get_profile(user: User) -> ProfilesReply.Profile:
         return ProfilesReply.Profile(
-            age=user.get_age(),
+            age=user.age,
             bio=user.bio,
             birth_date=user.birth_date,
             city=user.city,
             created=user.get_created(),
-            distance=0 if user.distance_mi is None else round(user.distance_mi * 1.6, 2),
+            distance=user.distance,
             id=user.id,
             liked=user.liked,
             name=user.name,
@@ -61,6 +64,14 @@ class Profiles(ProfilesServicer, BaseService):
             query = query.filter(User.visible)
         return query.where(User.name.ilike('%{}%'.format(name_partial))).scalar()
 
+    def FetchProfileByUserId(self, request: ProfileUserIdRequest, context: grpc.ServicerContext) -> ProfileIdReply:
+        statement = select(User).where(User.user_id == request.user_id)
+        try:
+            user: User = self.session.scalars(statement=statement).one()
+            return ProfileIdReply(id=user.id)
+        except NoResultFound:
+            return ProfileIdReply(id=0)
+
     def FetchProfiles(self, request: ProfilesRequest, context: grpc.ServicerContext) -> ProfilesReply:
         statement: Select = select(User).filter(User.visible)
         if request.status == Status.liked:
@@ -79,6 +90,12 @@ class Profiles(ProfilesServicer, BaseService):
                 total=self.fetch_all_users_count(request.status)
             )
         )
+
+    def FetchProfilesScheduledForLike(self, request: Empty, context: grpc.ServicerContext):
+        return ProfilesReply(reply=ProfilesReply.Reply(
+            profiles=[self.get_profile(user=user) for user in
+                      self.session.scalars(statement=select(User).where(User.scheduled)).all()],
+        ))
 
     def SearchProfiles(self, request: ProfilesSearchRequest, context: grpc.ServicerContext) -> ProfilesReply:
         self.log_message(

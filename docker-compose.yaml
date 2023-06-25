@@ -16,49 +16,48 @@ services:
       - ./db_init:/docker-entrypoint-initdb.d
   pg-admin:
     image: dpage/pgadmin4
+    depends_on:
+      - db
     environment:
       - PGADMIN_DEFAULT_EMAIL=oyapparov@gmail.com
       - PGADMIN_DEFAULT_PASSWORD=postgres
     ports:
       - "8888:80"
-  # connector:
-  #   container_name: storage-connector
-  #   image: ole-ya/storage-connector
-  #   depends_on:
-  #     - db
-  #   ports:
-  #     - "50051:50051"
-  #   environment:
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #     POSTGRES_HOST: storage
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #     POSTGRES_PORT: 5432
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  # api:
-  #   container_name: api
-  #   image: ole-ya/api
-  #   depends_on:
-  #     - db
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     GRPC_HOST: storage-connector
-  #     GRPC_PORT: 50051
-  # ui:
-  #   container_name: ui
-  #   image: ole-ya/ui
-  #   depends_on:
-  #     - api
-  #   ports:
-  #     - "8080:80"
-  # processor:
-  #   container_name: processor
-  #   image: ole-ya/processor
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #     POSTGRES_HOST: storage
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #     POSTGRES_PORT: 5432
-  #     POSTGRES_USER: ${POSTGRES_USER}
+  connector:
+    container_name: storage-connector
+    image: ole-ya/storage-connector
+    depends_on:
+      - db
+    ports:
+      - "50051:50051"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: storage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+  api:
+    container_name: api
+    image: ole-ya/api
+    depends_on:
+      - connector
+    ports:
+      - "8000:8000"
+    environment:
+      GRPC_HOST: storage-connector
+      GRPC_PORT: 50051
+  ui:
+    container_name: ui
+    image: ole-ya/ui
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+  processor:
+    container_name: processor
+    image: ole-ya/processor
+    depends_on:
+      - connector
+    environment:
+      GRPC_HOST: storage-connector
+      GRPC_PORT: 50051

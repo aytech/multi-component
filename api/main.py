@@ -12,11 +12,12 @@ import proto.actions_pb2_grpc
 import proto.logs_pb2_grpc
 import proto.profiles_pb2_grpc
 import proto.settings_pb2_grpc
+from proto.empty_pb2 import Empty
 from utilities.RemainingLikesDao import RemainingLikesDao
 from proto.actions_pb2 import ActionsRequest, ActionsReply
 from proto.logs_pb2 import LogsRequest, LogsReply
 from proto.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
-from proto.settings_pb2 import SettingsRequest, Empty, FetchSettingsValueReply
+from proto.settings_pb2 import SettingsRequest, FetchSettingsValueReply
 from routes import app_routes
 from utilities.Request import Request
 from utilities.Results import Results

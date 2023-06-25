@@ -28,11 +28,12 @@ class Photo(Base):
 class User(Base):
     __tablename__ = 'user'
 
+    age: Mapped[int] = mapped_column(Integer)
     bio: Mapped[str] = mapped_column(Text)
     birth_date: Mapped[str] = mapped_column(String(100))
     city: Mapped[str] = mapped_column(String(100))
     created: Mapped[datetime.datetime]
-    distance_mi: Mapped[int] = mapped_column(Integer)
+    distance: Mapped[int] = mapped_column(Integer)
     id: Mapped[int] = mapped_column(primary_key=True)
     liked: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String(100))
@@ -51,15 +52,15 @@ class User(Base):
             'user_id={self.user_id})
         '''
 
-    def get_age(self):
-        if self.birth_date is None:
-            return 0
-        try:
-            birth_date: datetime = datetime.datetime.strptime(str(self.birth_date), '%d %B, %Y')
-            return int((datetime.datetime.now() - birth_date).days / 365)
-        except ValueError as e:
-            print('Critical error: %s' % e)
-            return 0
+    def calculate_age(self) -> int:
+        if self.birth_date is not None:
+            try:
+                birth_date: datetime = datetime.datetime.strptime(str(self.birth_date), '%d %B, %Y')
+                if birth_date is not None:
+                    return int((datetime.datetime.now() - birth_date).days / 365)
+            except ValueError as e:
+                print('Critical error: %s' % e)
+        return 0
 
     def get_created(self):
         created: datetime = self.created.strftime('%d %b %H:%M:%S')

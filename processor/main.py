@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     while True:
         processor.collect_teaser()
-        # processor.process_likes()
-        # processor.collect_profiles()
-        print('Sleeping')
+        processor.process_likes()
+        processor.collect_profiles()
+
         time.sleep(3600)  # wait for an hour

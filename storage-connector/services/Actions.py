@@ -1,13 +1,53 @@
+import datetime
+
 import grpc
 from sqlalchemy import select, update
 
-from models.Profiles import User
-from proto.actions_pb2 import ActionsRequest, ActionsReply
+from models.Profiles import User, Photo
+from proto.actions_pb2 import ActionsRequest, ActionsReply, LikedStatusRequest, LikedStatusReply, AddProfileRequest, \
+    AddProfileReply, ActionsPhotoRequest
 from proto.actions_pb2_grpc import ActionsServicer
 from services.BaseService import BaseService
 
 
 class Actions(ActionsServicer, BaseService):
+
+    def AddProfile(self, request: AddProfileRequest, context: grpc.ServicerContext) -> AddProfileReply:
+        creation_date = datetime.datetime.now()
+        with self.session as session:
+            user: User = User(
+                bio=request.bio,
+                birth_date=request.birth_date,
+                city=request.city,
+                created=creation_date,
+                distance=0 if request.distance_mi is None else round(request.distance_mi * 1.6, 2),
+                liked=False,
+                name=request.name,
+                photos=[Photo(
+                    created=creation_date,
+                    photo_id=photo.photo_id,
+                    url=photo.url
+                ) for photo in request.photos],
+                s_number=request.s_number,
+                user_id=request.user_id
+            )
+            user.age = user.calculate_age()
+            session.add(user)
+            session.commit()
+            print('New user ID: %s' % user.id)
+            return AddProfileReply()
+
+    def RenewProfileImages(self, request: ActionsPhotoRequest, context: grpc.ServicerContext) -> ActionsReply:
+        user: User = self.session.scalar(statement=select(User).where(User.id == request.user_id))
+        if user is not None and user.visible is True:
+            for photo in request.photos:
+                with self.session as session:
+                    session.execute(
+                        statement=update(Photo).where(Photo.photo_id == photo.photo_id).values(url=photo.url))
+                    session.commit()
+                    return ActionsReply(success=True, message='Photo %s updated for user %s (%s)' % (
+                        photo.photo_id, user.name, user.s_number))
+        return ActionsReply(success=False, message='User %s not found' % request.user_id)
 
     def ScheduleLike(self, request: ActionsRequest, context: grpc.ServicerContext) -> ActionsReply:
         with self.session as session:
@@ -41,3 +81,11 @@ class Actions(ActionsServicer, BaseService):
             user.visible = False
             session.commit()
             return ActionsReply(success=True, message='User %s was hidden' % user.name, s_number=user.s_number)
+
+    def UpdateLiked(self, request: LikedStatusRequest, context: grpc.ServicerContext) -> LikedStatusReply:
+        with self.session as session:
+            session.execute(statement=update(User).where(User.id == request.user_id).values(liked=request.liked))
+            session.commit()
+        return LikedStatusReply(
+            success=True
+        )

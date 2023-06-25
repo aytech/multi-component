@@ -1,8 +1,16 @@
 syntax = "proto3";
 
+import "proto/empty.proto";
+
 service Profiles {
+    rpc FetchProfileByUserId (ProfileUserIdRequest) returns (ProfileIdReply) {}
     rpc FetchProfiles (ProfilesRequest) returns (ProfilesReply) {}
+    rpc FetchProfilesScheduledForLike (Empty) returns (ProfilesReply) {}
     rpc SearchProfiles (ProfilesSearchRequest) returns (ProfilesReply) {}
+}
+
+message ProfileUserIdRequest {
+    string user_id = 1;
 }
 
 message ProfilesRequest {
@@ -16,6 +24,10 @@ message ProfilesSearchRequest {
     string status = 2;
     int32 page = 3;
     int32 page_size = 4;
+}
+
+message ProfileIdReply {
+    int32 id = 1;
 }
 
 message ProfilesReply {
@@ -40,7 +52,7 @@ message ProfilesReply {
     }
     message Reply {
         repeated Profile profiles = 1;
-        int32 total = 2;
+        optional int32 total = 2;
     }
     Reply reply = 1;
 }

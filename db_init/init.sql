@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS public.user (
+    age INTEGER,
     bio TEXT,
     birth_date VARCHAR(100),
     city VARCHAR(100),
     created TIMESTAMP,
-    distance_mi INTEGER,
+    distance INTEGER,
     id serial PRIMARY KEY,
     liked BOOLEAN DEFAULT FALSE,
     name VARCHAR(100),

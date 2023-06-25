@@ -13,6 +13,7 @@ COPY ./requirements.txt ./requirements.txt
 RUN pip install -r ./requirements.txt
 
 COPY db ./db
+COPY proto ./proto
 COPY utilities ./utilities
 COPY main.py ./
 
