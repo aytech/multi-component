@@ -2,16 +2,16 @@ import { Page } from "./types"
 
 export const UrlUtility = {
   getUserSearchUrl: ( page: Page ) => {
-    let url = `/api/users/search/${ page.search }?page=${ page.page }&size=${ page.size }`
+    let url = `/api/users/search/${page.search}?page=${page.page}&size=${page.size}`
     if ( page.status !== undefined ) {
-      url += `&status=${ page.status }`
+      url += `&status=${page.status}`
     }
     return url
   },
   getUsersUrl: ( page: Page ) => {
-    let url = `/api/users?page=${ page.page }&size=${ page.size }`
+    let url = `/api/users?page=${page.page}&size=${page.size}`
     if ( page.status !== undefined ) {
-      url += `&status=${ page.status }`
+      url += `&status=${page.status}`
     }
     return url
   },
@@ -19,25 +19,28 @@ export const UrlUtility = {
     return "/api/logs"
   },
   getArchiveLogsUrl: ( from: number ) => {
-    return `${ UrlUtility.getLogsUrl() }/archive?from=${ from }`
+    return `${UrlUtility.getLogsUrl()}/archive?from=${from}`
   },
   getSearchLogsUrl: ( searchCriteria: string ) => {
-    return `${ UrlUtility.getLogsUrl() }/search?search=${ searchCriteria }`
+    return `${UrlUtility.getLogsUrl()}/search?search=${searchCriteria}`
   },
   getTailLogsUrl: ( to: number ) => {
-    return `${ UrlUtility.getLogsUrl() }/tail?to=${ to }`
+    return `${UrlUtility.getLogsUrl()}/tail?to=${to}`
   },
   getSettingsUrl: () => {
     return "/api/settings"
   },
   getSettingsLikesUrl: () => {
-    return `${ UrlUtility.getSettingsUrl() }/likes`
+    return `${UrlUtility.getSettingsUrl()}/likes`
+  },
+  getSettingsRemoveTeaserUrl: ( teaser: string ) => {
+    return `${UrlUtility.getSettingsUrl()}/teaser/${teaser}`
   },
   getSettingsUpdateApiKeyUrl: ( keyValue: string ) => {
-    return `${ UrlUtility.getSettingsUrl() }/token/${ keyValue }`
+    return `${UrlUtility.getSettingsUrl()}/token/${keyValue}`
   },
   getSettingsBaseUrl: ( urlValue: string ) => {
-    return `${ UrlUtility.getSettingsUrl() }/url/${ urlValue }`
+    return `${UrlUtility.getSettingsUrl()}/url/${urlValue}`
   },
   getSearchParameters: ( parameters: URLSearchParams, defaultPage: number, defaultSize: number ): Page => {
     const searchParameters: Page = { page: defaultPage, size: defaultSize }

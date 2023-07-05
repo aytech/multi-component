@@ -2,8 +2,8 @@ import { Button, Col, Divider, Input, List, Row, Skeleton, Table } from "antd"
 import "./styles.css"
 import { useEffect, useState } from "react"
 import { UrlUtility } from "../../lib/utilities"
-import { LikesData, SettingsData, SettingsOtherData } from "../../lib/types"
-import { ApiOutlined, KeyOutlined, SaveOutlined } from "@ant-design/icons"
+import { LikesData, SettingsData, SettingsOtherData, SettingsRawData, SettingsRemoveTeaserResponse, TeaserData } from "../../lib/types"
+import { ApiOutlined, DeleteOutlined, KeyOutlined, SaveOutlined } from "@ant-design/icons"
 
 interface Props {
   errorMessage: ( message: string ) => void
@@ -52,7 +52,9 @@ export const Settings = ( {
   const fetchSettings = async () => {
     setSettingsLoading( true )
     const response = await fetch( UrlUtility.getSettingsUrl() )
-    const settingsData: SettingsData = await response.json();
+    const settingsRawData: SettingsRawData = await response.json()
+    const teasers: Array<TeaserData> = settingsRawData.teasers?.map( teaser => ( { loading: false, name: teaser } ) )
+    const settingsData: SettingsData = { ...settingsRawData, teasers: teasers }
     setSettings( settingsData )
     setOtherSettings( [ {
       description: 'Scheduled users',
@@ -90,6 +92,27 @@ export const Settings = ( {
     }
   }
 
+  const removeTeaser = async ( teaser: TeaserData ) => {
+    if ( settings !== undefined ) {
+      setSettings( {
+        ...settings, teasers: settings.teasers.map( t => {
+          if ( t.name === teaser.name ) {
+            return { ...teaser, loading: true }
+          }
+          return teaser
+        } )
+      } )
+      const response = await fetch( UrlUtility.getSettingsRemoveTeaserUrl( teaser.name ), { method: "DELETE" } )
+      const responseData: SettingsRemoveTeaserResponse = await response.json()
+      if (responseData.success === true) {
+        successMessage(responseData.message)
+        fetchSettings()
+      } else {
+        errorMessage(responseData.message)
+      }
+    }
+  }
+
   const updateBaseUrl = async () => {
     if ( baseUrl !== undefined ) {
       setUrlLoading( true )
@@ -104,7 +127,7 @@ export const Settings = ( {
   }
 
   const getMaskedApiKey = () => {
-    if (settings !== undefined && settings.apiKey !== undefined) {
+    if ( settings !== undefined && settings.apiKey !== undefined ) {
       return new Array( settings.apiKey.length ).join( "*" )
     }
     return ""
@@ -119,7 +142,18 @@ export const Settings = ( {
       size="large"
       bordered
       dataSource={ settings?.teasers }
-      renderItem={ ( item ) => <List.Item>{ item }</List.Item> }
+      renderItem={ ( item ) => (
+        <List.Item
+          actions={ [
+            <Button onClick={ () => removeTeaser( item ) }>
+              <DeleteOutlined />
+            </Button>
+          ] }>
+          <Skeleton avatar title={ false } loading={ item.loading } active>
+            { item.name }
+          </Skeleton>
+        </List.Item>
+      ) }
     />
   )
 

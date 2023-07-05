@@ -41,11 +41,23 @@ export interface LogsData {
   logs: Array<Log>
 }
 
-export interface SettingsData {
+export interface TeaserData {
+  loading: boolean
+  name: string
+}
+
+export interface SettingsRawData {
   apiKey: string
   baseUrl: string
   scheduled: number
   teasers: Array<string>
+}
+
+export interface SettingsData {
+  apiKey: string
+  baseUrl: string
+  scheduled: number
+  teasers: Array<TeaserData>
 }
 
 export interface LikesData {
@@ -59,4 +71,9 @@ export interface SettingsOtherData {
   description: string
   key: number
   value: number
+}
+
+export interface SettingsRemoveTeaserResponse {
+  success: boolean
+  message: string
 }
