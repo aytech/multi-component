@@ -8,7 +8,7 @@ from models.Profiles import User
 from proto.empty_pb2 import Empty
 from proto.settings_pb2_grpc import SettingsServicer
 from proto.settings_pb2 import SettingsRequest, SettingsReply, FetchSettingsReply, FetchSettingsValueReply, \
-    AddTeaserRequest
+    TeaserRequest
 from services.BaseService import BaseService
 
 from models.Settings import Settings as SettingsModel
@@ -34,7 +34,7 @@ class Settings(SettingsServicer, BaseService):
             return []
         return json.loads(settings.value)
 
-    def AddTeaser(self, request: AddTeaserRequest, context: grpc.ServicerContext) -> Empty:
+    def AddTeaser(self, request: TeaserRequest, context: grpc.ServicerContext) -> Empty:
         statement: Select = select(SettingsModel).where(SettingsModel.name == SettingsModel.teasers_setting)
         teaser_setting: SettingsModel = self.session.scalar(statement=statement)
         teasers: list[str] = []
@@ -92,3 +92,17 @@ class Settings(SettingsServicer, BaseService):
 
     def FetchBaseUrl(self, request: Empty, context: grpc.ServicerContext) -> FetchSettingsValueReply:
         return FetchSettingsValueReply(value=self.get_base_url().value)
+
+    def RemoveTeaser(self, request: TeaserRequest, context: grpc.ServicerContext) -> SettingsReply:
+        statement: Select = select(SettingsModel).where(SettingsModel.name == SettingsModel.teasers_setting)
+        teaser_setting: SettingsModel = self.session.scalar(statement=statement)
+        teasers: list = json.loads(teaser_setting.value)
+        filtered_teasers: list = list(filter(lambda teaser: teaser != request.teaser, teasers))
+        if filtered_teasers != teasers:  # remove only if found
+            teaser_setting.value = json.dumps(filtered_teasers)
+            with self.session as session:
+                session.add(teaser_setting)
+                session.commit()
+            return SettingsReply(success=True, message='Teaser %s was removed' % request.teaser)
+        else:
+            return SettingsReply(success=False, message='Teaser %s not found' % request.teaser)

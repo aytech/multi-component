@@ -17,7 +17,7 @@ from utilities.RemainingLikesDao import RemainingLikesDao
 from proto.actions_pb2 import ActionsRequest, ActionsReply
 from proto.logs_pb2 import LogsRequest, LogsReply
 from proto.profiles_pb2 import ProfilesRequest, ProfilesSearchRequest
-from proto.settings_pb2 import SettingsRequest, FetchSettingsValueReply
+from proto.settings_pb2 import SettingsRequest, FetchSettingsValueReply, TeaserRequest, SettingsReply
 from routes import app_routes
 from utilities.Request import Request
 from utilities.Results import Results
@@ -171,6 +171,15 @@ def get_likes_remaining():
         response = app_request.make_api_call(url=url, method='GET')
         likes: RemainingLikesDao = Results.remaining_likes(response_data=response.data.decode('utf-8'))
         return make_response(jsonify(likes.to_dict()), requests.status_codes.codes.ok)
+
+
+@app.route(app_routes['REMOVE_TEASER'], methods=['DELETE'])
+def remove_teaser(teaser: str):
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = proto.settings_pb2_grpc.SettingsStub(channel=channel)
+        response: SettingsReply = stub.RemoveTeaser(TeaserRequest(teaser=teaser))
+        status: int = requests.status_codes.codes.ok if response.success else requests.status_codes.codes.bad_request
+        return make_response(MessageToJson(response), status)
 
 
 if __name__ == '__main__':
