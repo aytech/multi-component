@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.user (
     name VARCHAR(100),
     s_number BIGINT,
     scheduled BOOLEAN DEFAULT FALSE,
+    updated TIMESTAMP,
     user_id VARCHAR(100) NOT NULL,
     visible BOOLEAN DEFAULT TRUE
 );

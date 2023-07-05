@@ -29,6 +29,7 @@ class Actions(ActionsServicer, BaseService):
                     url=photo.url
                 ) for photo in request.photos],
                 s_number=request.s_number,
+                updated=creation_date,
                 user_id=request.user_id
             )
             user.age = user.calculate_age()
@@ -40,13 +41,15 @@ class Actions(ActionsServicer, BaseService):
     def RenewProfileImages(self, request: ActionsPhotoRequest, context: grpc.ServicerContext) -> ActionsReply:
         user: User = self.session.scalar(statement=select(User).where(User.id == request.user_id))
         if user is not None and user.visible is True:
-            for photo in request.photos:
-                with self.session as session:
+            with self.session as session:
+                for photo in request.photos:
                     session.execute(
                         statement=update(Photo).where(Photo.photo_id == photo.photo_id).values(url=photo.url))
                     session.commit()
                     return ActionsReply(success=True, message='Photo %s updated for user %s (%s)' % (
                         photo.photo_id, user.name, user.s_number))
+                user.updated = datetime.datetime.now()
+                session.commit()
         return ActionsReply(success=False, message='User %s not found' % request.user_id)
 
     def ScheduleLike(self, request: ActionsRequest, context: grpc.ServicerContext) -> ActionsReply:

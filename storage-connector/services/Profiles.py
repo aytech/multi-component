@@ -81,7 +81,7 @@ class Profiles(ProfilesServicer, BaseService):
         elif request.status == Status.new:
             statement = statement.filter(User.liked.is_(False), User.scheduled.is_(False))
         # paginate
-        statement = statement.order_by(User.created.desc()).offset((request.page - 1) * request.page_size).limit(
+        statement = statement.order_by(User.updated.desc()).offset((request.page - 1) * request.page_size).limit(
             request.page_size)
         self.log_message(message=str(statement), context=LogContext.SQL)
         return ProfilesReply(
