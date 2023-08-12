@@ -85,6 +85,15 @@ class Actions(ActionsServicer, BaseService):
             session.commit()
             return ActionsReply(success=True, message='User %s was hidden' % user.name, s_number=user.s_number)
 
+    def RestoreProfile(self, request: ActionsRequest, context: grpc.ServicerContext) -> ActionsReply:
+        with self.session as session:
+            user: User = session.scalar(statement=select(User).where(User.id == request.user_id))
+            if user is None:
+                return ActionsReply(success=False, message='User not found')
+            user.visible = True
+            session.commit()
+            return ActionsReply(success=True, message='User %s was restored' % user.name, s_number=user.s_number)
+
     def UpdateLiked(self, request: LikedStatusRequest, context: grpc.ServicerContext) -> LikedStatusReply:
         with self.session as session:
             session.execute(statement=update(User).where(User.id == request.user_id).values(liked=request.liked))

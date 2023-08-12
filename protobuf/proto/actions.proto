@@ -4,6 +4,7 @@ service Actions {
     rpc AddProfile (AddProfileRequest) returns (AddProfileReply) {}
     rpc HideProfile (ActionsRequest) returns (ActionsReply) {}
     rpc RenewProfileImages (ActionsPhotoRequest) returns (ActionsReply) {}
+    rpc RestoreProfile (ActionsRequest) returns (ActionsReply) {}
     rpc ScheduleLike (ActionsRequest) returns (ActionsReply) {}
     rpc UnScheduleLike (ActionsRequest) returns (ActionsReply) {}
     rpc UpdateLiked (LikedStatusRequest) returns (LikedStatusReply) {}

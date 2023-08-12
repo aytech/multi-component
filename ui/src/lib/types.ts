@@ -12,6 +12,7 @@ export interface Profile {
   s_number: number
   scheduled: boolean
   user_id: string
+  visible: boolean
 }
 
 export interface Photo {

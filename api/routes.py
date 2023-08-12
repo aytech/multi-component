@@ -7,6 +7,7 @@ app_routes: dict = {
     'HIDE_USER': '/api/users/<int:user_id>/hide',
     'LIST_USERS': '/api/users',
     'REMOVE_TEASER': '/api/settings/teaser/<string:teaser>',
+    'RESTORE_USER': '/api/users/<int:user_id>/restore',
     'SAVE_API_TOKEN': '/api/settings/token/<string:token>',
     'SAVE_BASE_URL': '/api/settings/url/<string:url>',
     'SCHEDULE_LIKE': '/api/users/schedule/<int:user_id>',

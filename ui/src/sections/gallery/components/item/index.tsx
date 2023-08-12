@@ -1,5 +1,5 @@
 import { Card, Carousel, Col, Image, Row, Tooltip } from "antd"
-import { Profile } from "../../../../lib/types"
+import { Photo, Profile } from "../../../../lib/types"
 import { useState } from "react"
 import "./styles.css"
 import { Actions } from "../actions"
@@ -23,6 +23,7 @@ export const GalleryItem = ( {
   const [ unscheduleLoading, setUnscheduleLoading ] = useState<boolean>( false )
   const [ hideLoading, setHideLoading ] = useState<boolean>( false )
   const [ scheduleLoading, setScheduleLoading ] = useState<boolean>( false )
+  const [ unhideLoading, setUnhideLoading ] = useState<boolean>( false )
 
   const makeRequest = async ( url: string, callback: () => void ) => {
     try {
@@ -61,6 +62,13 @@ export const GalleryItem = ( {
     } )
   }
 
+  const unhideProfile = async ( profileId: number ) => {
+    setUnhideLoading( true )
+    makeRequest( `/api/users/${profileId}/restore`, () => {
+      setUnhideLoading( false )
+    } )
+  }
+
   const ShortBio = ( { bio }: { bio?: string | null } ) => {
     if ( bio === null || bio == undefined ) {
       return <span></span>
@@ -93,10 +101,10 @@ export const GalleryItem = ( {
         hoverable
         cover={
           <Carousel autoplay dots={ { className: "photo-dots" } }>
-            { profile.photos.map( ( photo: any ) => (
+            { profile.photos.map( ( photo: Photo ) => (
               <Image
                 className="carousel-image"
-                key={ photo.photo_id }
+                key={ photo.photoId }
                 width={ 240 }
                 src={ photo.url }
                 style={ { overflow: 'hidden' } } />
@@ -135,10 +143,15 @@ export const GalleryItem = ( {
                 liked={ profile.liked }
                 scheduling={ scheduleLoading }
                 scheduled={ profile.scheduled }
+                unhide={ () => {
+                  unhideProfile( profile.id )
+                } }
+                unhiding={ unhideLoading }
                 unschedule={ () => {
                   unscheduleProfile( profile.id )
                 } }
-                unscheduling={ unscheduleLoading } />
+                unscheduling={ unscheduleLoading }
+                visible={ profile.visible } />
             </Row>
           </>
         ) }></Meta>

@@ -1,4 +1,4 @@
-import { DislikeOutlined, LikeOutlined, StopOutlined } from "@ant-design/icons"
+import { DislikeOutlined, EyeInvisibleOutlined, LikeOutlined, StopOutlined } from "@ant-design/icons"
 import { Button, Col, Tooltip } from "antd"
 
 interface Props {
@@ -8,8 +8,11 @@ interface Props {
   schedule: () => void
   scheduled: boolean
   scheduling: boolean
-  unschedule: () => void,
+  unhide: () => void
+  unhiding: boolean
+  unschedule: () => void
   unscheduling: boolean
+  visible: boolean
 }
 
 export const Actions = ( {
@@ -19,10 +22,24 @@ export const Actions = ( {
   schedule,
   scheduled,
   scheduling,
+  unhide,
+  unhiding,
   unschedule,
-  unscheduling
+  unscheduling,
+  visible
 }: Props ) => {
-  return (
+  return visible === false ? (
+    <Col className="text-center" xs={ 24 }>
+      <Button
+        loading={ unhiding }
+        onClick={ unhide }
+        type="primary">
+        <Tooltip title="User is invisible, click to restore">
+          <EyeInvisibleOutlined />
+        </Tooltip>
+      </Button>
+    </Col>
+  ) : (
     <>
       <Col className="text-center" xs={ unscheduling || hiding ? 6 : scheduling ? 12 : 8 }>
         <Button

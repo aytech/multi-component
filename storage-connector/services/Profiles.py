@@ -21,7 +21,7 @@ class Profiles(ProfilesServicer, BaseService):
 
     @staticmethod
     def get_profile(user: User) -> ProfilesReply.Profile:
-        return ProfilesReply.Profile(
+        profile: ProfilesReply.Profile = ProfilesReply.Profile(
             age=user.age,
             bio=user.bio,
             birth_date=user.birth_date,
@@ -37,8 +37,11 @@ class Profiles(ProfilesServicer, BaseService):
             ) for photo in user.photos],
             s_number=user.s_number,
             scheduled=user.scheduled,
-            user_id=user.user_id
+            user_id=user.user_id,
+            visible={}
         )
+        profile.visible.value = user.visible
+        return profile
 
     def fetch_all_users_count(self, status: str):
         query: Query = self.session.query(func.count(User.id))
@@ -55,13 +58,11 @@ class Profiles(ProfilesServicer, BaseService):
     def fetch_filtered_users_count(self, name_partial: str, status: str):
         query: Query = self.session.query(func.count(User.id))
         if status == Status.liked:
-            query = query.filter(User.visible, User.liked)
+            query = query.filter(User.liked)
         elif status == Status.scheduled:
-            query = query.filter(User.visible, User.scheduled)
+            query = query.filter(User.scheduled)
         elif status == Status.new:
-            query = query.filter(User.visible, User.scheduled.is_(False), User.liked.is_(False))
-        else:
-            query = query.filter(User.visible)
+            query = query.filter(User.scheduled.is_(False), User.liked.is_(False))
         return query.where(User.name.ilike('%{}%'.format(name_partial))).scalar()
 
     def FetchProfileByUserId(self, request: ProfileUserIdRequest, context: grpc.ServicerContext) -> ProfileIdReply:
@@ -104,13 +105,11 @@ class Profiles(ProfilesServicer, BaseService):
             context='%s:SearchProfiles' % LogContext.SQL)
         statement: Select = select(User).where(User.name.ilike('%{}%'.format(request.value)))
         if request.status == Status.liked:
-            statement = statement.filter(User.visible, User.liked)
+            statement = statement.filter(User.liked)
         elif request.status == Status.scheduled:
-            statement = statement.filter(User.visible, User.scheduled)
+            statement = statement.filter(User.scheduled)
         elif request.status == Status.new:
-            statement = statement.filter(User.visible, User.scheduled.is_(False), User.liked.is_(False))
-        else:
-            statement = statement.filter(User.visible)
+            statement = statement.filter(User.scheduled.is_(False), User.liked.is_(False))
         statement = statement.order_by(User.created.desc()).offset((request.page - 1) * request.page_size).limit(
             request.page_size)
         self.log_message(message=str(statement), context=LogContext.SQL)

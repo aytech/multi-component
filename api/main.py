@@ -95,6 +95,16 @@ def hide_user(user_id: int):
         return make_response(MessageToJson(response), requests.status_codes.codes.bad_request)
 
 
+@app.route(app_routes['RESTORE_USER'], methods=['POST'])
+def restore_user(user_id: int):
+    with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
+        stub = proto.actions_pb2_grpc.ActionsStub(channel=channel)
+        response: ActionsReply = stub.RestoreProfile(ActionsRequest(user_id=user_id))
+        if response.success:
+            return make_response(MessageToJson(response), requests.status_codes.codes.ok)
+        return make_response(MessageToJson(response), requests.status_codes.codes.bad_request)
+
+
 @app.route(app_routes['GET_LOGS'], methods=['GET'])
 def get_logs():
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
