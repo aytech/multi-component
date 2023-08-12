@@ -153,7 +153,8 @@ def search_logs():
 def add_or_update_token(token: str):
     with grpc.insecure_channel('%s:%s' % (grpc_host, grpc_port)) as channel:
         stub = proto.settings_pb2_grpc.SettingsStub(channel=channel)
-        return stub.AddUpdateApiKey(SettingsRequest(value=token))
+        response: SettingsReply = stub.AddUpdateApiKey(SettingsRequest(value=token))
+        return make_response(MessageToJson(response), requests.status_codes.codes.ok)
 
 
 @app.route(app_routes['SAVE_BASE_URL'], methods=['POST'])
