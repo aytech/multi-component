@@ -6,10 +6,7 @@ data
 **/node_modules
 **/__pycache__
 
-api/proto/*.py
-api/proto/*.pyi
-protobuf/generated
-processor/proto/*.py
-processor/proto/*.pyi
-storage-connector/proto/*.py
-storage-connector/proto/*.pyi
+api/proto/*.py*
+protobuf/proto/*.py*
+processor/proto/*.py*
+storage-connector/proto/*.py*
